@@ -1,0 +1,16 @@
+google-generativeai
+ipykernel
+langchain-community
+langchain-huggingface
+langchain-qdrant
+langchain-text-splitters
+matplotlib
+numpy<2
+pandas
+qdrant-client
+rank_bm25
+scikit-learn
+sentence-transformers
+streamlit
+IProgress
+tabulate
