@@ -14,3 +14,7 @@ sentence-transformers
 streamlit
 IProgress
 tabulate
+unstructured
+pandarallel
+ipywidgets
+retry
