@@ -10,3 +10,4 @@ git_training
 **/*.pkl
 **/models/*
 **/.venv
+**/.ipynb_checkpoints
