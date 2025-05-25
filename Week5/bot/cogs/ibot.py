@@ -19,7 +19,9 @@ from nextcord.ext import commands
 from typing import List
 from helpers.utils import load_config
 import ollama
+from tqdm.auto import tqdm
 
+tqdm.pandas(desc="Processing DataFrame")
 config = load_config()
 
 OLLAMA_MODEL_NAME = 'llama3.2:latest'
@@ -348,24 +350,24 @@ class GenAIBot(commands.Cog):
         self.bot = bot
         self._chat_history = {}
 
-        # df = pd.read_csv(
-        #     '../../IndianFoodDataset.csv',
-        # ).set_index('Srno')[columns]
+        df = pd.read_csv(
+            '../IndianFoodDataset.csv',
+        ).set_index('Srno')[columns]
 
-        # data = df[:].progress_apply(convert_to_doc, axis=1)
-        # self.vector_store_unchunked = Qdrant.from_documents(
-        #     data,
-        #     model_384,
-        #     collection_name="indian-food-metadata",
-        #     location=':memory:',
-        #     # url="http://localhost:6333",
-        # )
-
-        self.vector_store_unchunked = Qdrant(
-            client=QdrantClient(url='http://localhost:6333'),
+        data = df[:].progress_apply(convert_to_doc, axis=1)
+        self.vector_store_unchunked = Qdrant.from_documents(
+            data,
+            model_384,
             collection_name="indian-food-metadata",
-            embeddings=model_384,
+            location=':memory:',
+            # url="http://localhost:6333",
         )
+
+        # self.vector_store_unchunked = Qdrant(
+        #     client=QdrantClient(url='http://localhost:6333'),
+        #     collection_name="indian-food-metadata",
+        #     embeddings=model_384,
+        # )
 
     @commands.Cog.listener()
     async def on_message(
