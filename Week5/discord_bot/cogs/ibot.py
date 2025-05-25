@@ -404,13 +404,19 @@ class GenAIBot(commands.Cog):
                 for msg in chat_messages
             ]
         )
-
+        user_messages = '\n'.join(
+            [
+                message['content']
+                for message in chat_messages if
+                message['role'] == 'user'
+            ])
+        print(user_messages)
         results = search(
-            # user_messages,
-            RAG_PROMPT.format(
-                user_message=user_message,
-                chat_history=chat_messages,
-            ),
+            user_messages,
+            # RAG_PROMPT.format(
+            #     user_message=user_message,
+            #     chat_history=chat_messages,
+            # ),
             o_client=ollama_client,
             vector_store=self.vector_store_unchunked,
             reranking_model=model_768,
