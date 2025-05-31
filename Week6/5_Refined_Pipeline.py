@@ -1,4 +1,3 @@
-
 # Required Imports
 from sqlalchemy import inspect, text, create_engine
 import csv
@@ -36,7 +35,7 @@ def get_table_schema_as_csv(connection, table_name):
     # Fetch first row as sample content
     sample_query = text(f"SELECT * FROM {table_name} LIMIT 1")
     result = connection.execute(sample_query)
-    first_row = result.mappings().fetchone()  # Dict-like access
+    first_row = result.mappings().fetchone()
 
     # Prepare CSV output
     output = io.StringIO()
@@ -53,8 +52,8 @@ def get_table_schema_as_csv(connection, table_name):
 
 def extract_sql_query(text):
     """
-    Extracts SQL query string from a block of text enclosed in markdown-style SQL fences.
-    Supports ```sql ... ```, '''sql ... ''', etc.
+    Extracts SQL query string from a block of text enclosed.
+    Eg.  ```sql ... ```, '''sql ... '''
     """
     # Match common SQL code block styles
     pattern = r"(?:```sql|'''sql|```|''')\s*(.*?)\s*(?:```|'''|$)"
@@ -74,6 +73,7 @@ def RAG_Response (Client, Model, conn, table_name, Prompt) :
                 SQL Query String.\n\
                 Instructions:\
                 From the given SQL table schema, formulate SQL query which answers user's question.\
+                Write query to retrieve all relevant information to provide enough context for the question.\
                 Provide just the query string. No title, no introduction\
                 Its SQLite DB. Schema is provided as comma seperated text.\
                 When you use Text fields, always bring to lower case and use wild card : %xxx%\
@@ -81,7 +81,7 @@ def RAG_Response (Client, Model, conn, table_name, Prompt) :
                 "
 
     Schema = get_table_schema_as_csv (conn, table_name)
-    print (Schema)
+    # print (Schema)
 
     messages=[
         {
