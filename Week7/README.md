@@ -20,25 +20,7 @@ If you haven't already, clone the repository using Git:
 git clone https://github.com/outskill-git/GenAIEngineering-Cohort1
 
 # Navigate into the repository folder
-cd GenAIEngineering-Cohort1
-```
-
-### Navigate to the Week 7 Directory
-
-Move into the Week7 directory:
-
-```bash
-# Navigate to the Week7 directory
-cd Week7
-```
-
-## Session 1: Multimodal Data Fundamentals
-
-Navigate to the session_1 directory for hands-on exercises:
-
-```bash
-# Navigate to session_1
-cd session_1
+cd GenAIEngineering-Cohort1/Week7
 ```
 
 ### Create a Virtual Environment
@@ -100,6 +82,25 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
    - Image preprocessing: resizing, normalization, augmentation
    - Audio preprocessing: resampling, windowing, feature extraction
 
+3. **03-evaluation.ipynb** [Google Colab](https://colab.research.google.com/drive/1FR9Ua8VoAPI-nYlgXagiRhOSGq40cDGC?usp=sharing)
+   - Covers popular metrics used in Multimodal AI like BLEU and CLIP.
+  
+### Session 2 Notebooks:
+
+1. **01-dataset-loading-and-preprocessing.ipynb** [Google Colab](https://colab.research.google.com/drive/1cS4MUQx4Zl_5b9Z3UFQCE3maEUnLpjFn?usp=sharing)
+   - Real-world multimodal dataset loading with MSR-VTT video captioning dataset
+   - Dataset structure analysis and characterization techniques
+   - Advanced preprocessing pipeline design and optimization
+   - Custom dataset classes and efficient data loaders with PyTorch
+   - Memory-efficient handling of large-scale multimodal datasets
+
+2. **02-data-alignment.ipynb** [Google Colab](https://colab.research.google.com/drive/1a4Nb3y8Wz5xt88JKJ_f5bn_nistPAiOb?usp=sharing)
+   - Temporal alignment and synchronization of multimodal data
+   - Cross-modal validation and missing data detection
+   - Time-based alignment strategies for video and text
+   - Building complete alignment systems for multimodal applications
+   - Practical alignment techniques with real video-caption pairs
+
 ## Key Concepts Covered
 
 - **Text Modality**: Tokenization, vocabulary mapping, sequence padding
@@ -107,6 +108,8 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
 - **Audio Modality**: Sample rate conversion, spectral features, windowing
 - **Data Standardization**: Preparing multimodal data for AI models
 - **Preprocessing Pipelines**: End-to-end data transformation workflows
+
+
 
 ## Troubleshooting
 
@@ -121,12 +124,3 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
 - Check that your virtual environment is activated (you should see `(venv)` in your terminal prompt)
 - Verify all packages are installed with `pip list`
 - Restart Jupyter kernel if you encounter runtime errors
-
-## Next Steps
-
-After completing Session 1, you'll have a solid foundation in:
-- How multimodal data is represented and processed
-- Individual preprocessing techniques for each modality
-- The challenges and considerations in multimodal AI systems
-
-This prepares you for more advanced topics in multimodal fusion and integration techniques. 
