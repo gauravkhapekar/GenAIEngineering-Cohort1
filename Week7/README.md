@@ -82,6 +82,9 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
    - Image preprocessing: resizing, normalization, augmentation
    - Audio preprocessing: resampling, windowing, feature extraction
 
+3. **03-evaluation.ipynb** [Google Colab](https://colab.research.google.com/drive/1FR9Ua8VoAPI-nYlgXagiRhOSGq40cDGC?usp=sharing)
+   - Covers popular metrics used in Multimodal AI like BLEU and CLIP.
+  
 ### Session 2 Notebooks:
 
 1. **01-dataset-loading-and-preprocessing.ipynb** [Google Colab](https://colab.research.google.com/drive/1cS4MUQx4Zl_5b9Z3UFQCE3maEUnLpjFn?usp=sharing)
@@ -121,12 +124,3 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
 - Check that your virtual environment is activated (you should see `(venv)` in your terminal prompt)
 - Verify all packages are installed with `pip list`
 - Restart Jupyter kernel if you encounter runtime errors
-
-## Next Steps
-
-After completing Session 1, you'll have a solid foundation in:
-- How multimodal data is represented and processed
-- Individual preprocessing techniques for each modality
-- The challenges and considerations in multimodal AI systems
-
-This prepares you for more advanced topics in multimodal fusion and integration techniques. 
