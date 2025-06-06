@@ -82,6 +82,22 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
    - Image preprocessing: resizing, normalization, augmentation
    - Audio preprocessing: resampling, windowing, feature extraction
 
+### Session 2 Notebooks:
+
+1. **01-dataset-loading-and-preprocessing.ipynb** [Google Colab](https://colab.research.google.com/drive/1cS4MUQx4Zl_5b9Z3UFQCE3maEUnLpjFn?usp=sharing)
+   - Real-world multimodal dataset loading with MSR-VTT video captioning dataset
+   - Dataset structure analysis and characterization techniques
+   - Advanced preprocessing pipeline design and optimization
+   - Custom dataset classes and efficient data loaders with PyTorch
+   - Memory-efficient handling of large-scale multimodal datasets
+
+2. **02-data-alignment.ipynb** [Google Colab](https://colab.research.google.com/drive/1a4Nb3y8Wz5xt88JKJ_f5bn_nistPAiOb?usp=sharing)
+   - Temporal alignment and synchronization of multimodal data
+   - Cross-modal validation and missing data detection
+   - Time-based alignment strategies for video and text
+   - Building complete alignment systems for multimodal applications
+   - Practical alignment techniques with real video-caption pairs
+
 ## Key Concepts Covered
 
 - **Text Modality**: Tokenization, vocabulary mapping, sequence padding
@@ -89,6 +105,8 @@ python -c "import numpy; print('NumPy version:', numpy.__version__)"
 - **Audio Modality**: Sample rate conversion, spectral features, windowing
 - **Data Standardization**: Preparing multimodal data for AI models
 - **Preprocessing Pipelines**: End-to-end data transformation workflows
+
+
 
 ## Troubleshooting
 
