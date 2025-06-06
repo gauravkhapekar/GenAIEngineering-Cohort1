@@ -20,25 +20,7 @@ If you haven't already, clone the repository using Git:
 git clone https://github.com/outskill-git/GenAIEngineering-Cohort1
 
 # Navigate into the repository folder
-cd GenAIEngineering-Cohort1
-```
-
-### Navigate to the Week 7 Directory
-
-Move into the Week7 directory:
-
-```bash
-# Navigate to the Week7 directory
-cd Week7
-```
-
-## Session 1: Multimodal Data Fundamentals
-
-Navigate to the session_1 directory for hands-on exercises:
-
-```bash
-# Navigate to session_1
-cd session_1
+cd GenAIEngineering-Cohort1/Week7
 ```
 
 ### Create a Virtual Environment
