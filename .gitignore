@@ -11,3 +11,4 @@ git_training
 **/models/*
 **/.venv
 **/.ipynb_checkpoints
+*.mp4
