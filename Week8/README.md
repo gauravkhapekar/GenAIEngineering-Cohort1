@@ -9,6 +9,8 @@ This week focuses on understanding and implementing embeddings for different mod
 - Implement late fusion techniques for multimodal classification
 - Explore visualization techniques for high-dimensional embeddings
 - Build complete multimodal pipelines using Hugging Face models
+- Work with advanced multimodal models like CLIP and BLIP
+- Generate images using diffusion models with various conditioning approaches
 
 ## Repository Setup
 
@@ -101,6 +103,39 @@ python -c "import torch; import transformers; import datasets; print('Setup succ
    - Weighted fusion techniques and threshold-based binary classification
    - Detailed analysis of fusion calculations and decision boundaries
 
+### Session 2 Notebooks:
+
+1. **clip.ipynb** [Google Colab](https://colab.research.google.com/drive/1tpVJFdg5_7_k-Bsthcap3MNADgFiqHtx?usp=sharing)
+   - Working with CLIP (Contrastive Language-Image Pre-training) models from Hugging Face
+   - Zero-shot image classification using natural language descriptions
+   - Computing image-text similarity scores and cross-modal retrieval
+   - Extracting and comparing image and text features in shared embedding space
+   - Building similarity matrices for multimodal understanding
+
+2. **blip.ipynb** [Google Colab](https://colab.research.google.com/drive/1UsXI3Er7aWsL3pIDsFJ_FCJMlUnkdmTa?usp=sharing)
+   - Implementing BLIP (Bootstrapping Language-Image Pre-training) for various vision-language tasks
+   - Automatic image captioning and description generation
+   - Visual question answering (VQA) with natural language queries
+   - Image-text matching and retrieval tasks
+   - Using BLIP pipelines for multimodal understanding
+
+3. **diffusion_text2img.ipynb** [Google Colab](https://colab.research.google.com/drive/1DA2GPoR8rGgYOCgdTUDpX1eMxWKcWFVV?usp=sharing)
+   - Text-to-image generation using Stable Diffusion models
+   - Loading and configuring diffusion pipelines from Hugging Face
+
+4. **diffusion_img2img.ipynb** [Google Colab](https://colab.research.google.com/drive/1q00kVpnYnKZmYNICE05_1NHC8bSUFQH0?usp=sharing)
+   - Image-to-image transformation using Stable Diffusion
+   - Loading and preprocessing input images for transformation
+   - Combining text prompts with existing images for guided editing
+   - Comparing original and transformed images
+
+5. **diffusion_inpainting.ipynb** [Google Colab](https://colab.research.google.com/drive/1H0hDErdyI_Qg5dpULRls8a8-3tOyhqMB?usp=sharing)
+   - Image inpainting and object removal using diffusion models
+   - Creating custom masks for selective image editing
+   - Circular and rectangular mask generation techniques
+   - Context-aware image completion and object replacement
+   - Advanced inpainting techniques with text guidance
+
 ## Key Concepts Covered
 
 ### Embeddings
@@ -115,11 +150,27 @@ python -c "import torch; import transformers; import datasets; print('Setup succ
 - **Score Aggregation**: Methods for combining confidence scores
 - **Threshold-based Classification**: Converting continuous scores to discrete labels
 
+### Advanced Multimodal Models
+- **CLIP (Contrastive Language-Image Pre-training)**: Joint text-image understanding
+- **Zero-shot Classification**: Using natural language for image classification
+- **Cross-modal Retrieval**: Finding images from text queries and vice versa
+- **Shared Embedding Space**: Understanding joint text-image representations
+
+### Vision-Language Models
+- **BLIP (Bootstrapping Language-Image Pre-training)**: Unified vision-language understanding
+- **Image Captioning**: Automatic generation of image descriptions
+- **Visual Question Answering**: Answering questions about image content
+- **Image-Text Matching**: Determining correspondence between images and text
+
+### Diffusion Models
+- **Text-to-Image Generation**: Creating images from textual descriptions
+- **Image-to-Image Translation**: Transforming existing images with text guidance
+- **Image Inpainting**: Filling missing or masked regions in images
+
 ### Visualization and Analysis
 - **Dimensionality Reduction**: PCA, t-SNE for embedding visualization
 - **Similarity Analysis**: Cosine similarity, distance metrics
 - **Clustering**: Understanding embedding space structure
-- **Performance Evaluation**: Classification metrics and fusion effectiveness
   
 ### Getting Help:
 
