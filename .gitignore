@@ -12,3 +12,7 @@ git_training
 **/.venv
 **/.ipynb_checkpoints
 *.mp4
+*.csv
+*.lance*
+*.jpg
+*.pyc
