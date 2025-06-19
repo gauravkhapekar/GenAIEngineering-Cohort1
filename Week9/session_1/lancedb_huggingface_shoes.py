@@ -284,7 +284,7 @@ def run_shoes_search(
         search_results.append({
             'rank': i + 1,
             'product_id': result.product_id,
-            'description': result.description[:100] + "..." if result.description and len(result.description) > 100 else result.description,
+            'description': result.description,  # Remove truncation
             'product_type': result.product_type,
             'gender': result.gender,
             'color': result.color,
@@ -614,6 +614,180 @@ def run_complete_shoes_rag_pipeline(
         return {"query": search_query, "results": results, "response": "LLM unavailable - showing search results only", "search_type": actual_search_type}
 
 
+def run_complete_shoes_rag_pipeline_with_details(
+    database: str,
+    table_name: str,
+    schema: Any,
+    search_query: Any,  # Can be text string or image path/PIL Image
+    limit: int = 3,
+    use_llm: bool = True,
+    use_advanced_prompts: bool = True,
+    search_type: str = "auto",
+    model_provider: str = "qwen",
+    model_name: str = "Qwen/Qwen2.5-0.5B-Instruct",
+    openai_api_key: Optional[str] = None
+) -> Dict[str, Any]:
+    """Run complete RAG pipeline with detailed step tracking for Gradio interface."""
+    
+    # Initialize step details
+    retrieval_details = ""
+    augmentation_details = ""
+    generation_details = ""
+    
+    # SECTION 1: RETRIEVAL - Get relevant shoes from vector database
+    retrieval_details += "🔍 RETRIEVAL PHASE\n"
+    retrieval_details += "=" * 50 + "\n"
+    retrieval_details += f"🎯 Query Type: {search_type}\n"
+    retrieval_details += f"🔍 Searching vector database...\n"
+    
+    results, actual_search_type = run_shoes_search(database, table_name, schema, search_query, limit, search_type=search_type)
+    
+    retrieval_details += f"✅ Search completed!\n"
+    retrieval_details += f"📊 Search Type Detected: {actual_search_type}\n"
+    retrieval_details += f"📈 Results Found: {len(results)}\n\n"
+    
+    if results:
+        retrieval_details += "🎯 Retrieved Products:\n"
+        for i, result in enumerate(results, 1):
+            retrieval_details += f"  {i}. {result.get('product_type', 'Shoe')} for {result.get('gender', 'Unisex')}\n"
+            retrieval_details += f"     Color: {result.get('color', 'N/A')}\n"
+            retrieval_details += f"     Pattern: {result.get('pattern', 'N/A')}\n"
+            if result.get('description'):
+                # Show full description without truncation
+                retrieval_details += f"     Description: {result['description']}\n"
+            retrieval_details += "\n"
+    else:
+        retrieval_details += "❌ No results found\n"
+        return {
+            "query": search_query, 
+            "results": [], 
+            "response": "No results found", 
+            "search_type": actual_search_type,
+            "retrieval_details": retrieval_details,
+            "augmentation_details": "⏭️ Skipped - No results to process",
+            "generation_details": "⏭️ Skipped - No results to process"
+        }
+    
+    if not use_llm:
+        return {
+            "query": search_query, 
+            "results": results, 
+            "response": None, 
+            "search_type": actual_search_type,
+            "retrieval_details": retrieval_details,
+            "augmentation_details": "⏭️ Skipped - LLM disabled",
+            "generation_details": "⏭️ Skipped - LLM disabled"
+        }
+    
+    # SECTION 2: AUGMENTATION - Process and enhance context with prompt engineering
+    try:
+        augmentation_details += "📝 AUGMENTATION PHASE\n"
+        augmentation_details += "=" * 50 + "\n"
+        
+        # Set up prompt manager and analyze query
+        prompt_manager = SimpleShoePrompts()
+        
+        # For image search, use appropriate query text
+        if actual_search_type == "image":
+            query_text = "similar shoes based on the provided image"
+            augmentation_details += f"🖼️ Image Search Detected\n"
+            augmentation_details += f"🔄 Query Text: '{query_text}'\n"
+        else:
+            query_text = str(search_query)
+            query_type = prompt_manager.classify_query(query_text)
+            augmentation_details += f"📝 Text Query: '{query_text}'\n"
+            augmentation_details += f"🎯 Query Classification: {query_type.value}\n"
+        
+        # Format context and generate enhanced prompt
+        enhanced_prompt = prompt_manager.generate_prompt(query_text, results, actual_search_type)
+        
+        augmentation_details += f"📊 Context Processing:\n"
+        augmentation_details += f"  • Products formatted: {len(results)}\n"
+        augmentation_details += f"  • Prompt strategy: {'Advanced' if use_advanced_prompts else 'Basic'}\n"
+        augmentation_details += f"  • Prompt length: {len(enhanced_prompt)} characters\n\n"
+        
+        # Show the full prompt instead of preview
+        augmentation_details += f"🔍 Full Prompt:\n{enhanced_prompt}\n\n"
+        
+        # SECTION 3: GENERATION - Setup LLM and generate response
+        generation_details += "🤖 GENERATION PHASE\n"
+        generation_details += "=" * 50 + "\n"
+        generation_details += f"🏭 Model Provider: {model_provider}\n"
+        generation_details += f"🎯 Model Name: {model_name}\n"
+        
+        tokenizer, model, openai_client = None, None, None
+        
+        if model_provider == "openai":
+            if not openai_api_key:
+                raise ValueError("OpenAI API key is required for OpenAI models")
+            openai_client = setup_openai_client(openai_api_key)
+            generation_details += f"✅ OpenAI client initialized\n"
+            generation_details += f"🔑 API key: {'*' * (len(openai_api_key) - 8) + openai_api_key[-4:] if len(openai_api_key) > 8 else '****'}\n"
+        else:
+            tokenizer, model = setup_qwen_model(model_name)
+            generation_details += f"✅ Qwen model loaded\n"
+            generation_details += f"💾 Model size: {model_name}\n"
+        
+        generation_details += f"⚙️ Generation settings:\n"
+        generation_details += f"  • Max tokens: 200\n"
+        generation_details += f"  • Temperature: 0.1 (low for consistency)\n"
+        generation_details += f"  • Advanced prompts: {use_advanced_prompts}\n\n"
+        
+        generation_details += f"🔄 Generating response...\n"
+        
+        # Generate final response using augmented context
+        response = generate_shoes_rag_response(
+            query=query_text,
+            retrieved_shoes=results,
+            model_provider=model_provider,
+            model_name=model_name,
+            openai_client=openai_client,
+            tokenizer=tokenizer,
+            model=model,
+            max_tokens=200,
+            use_advanced_prompts=use_advanced_prompts
+        )
+        
+        generation_details += f"✅ Response generated!\n"
+        generation_details += f"📏 Response length: {len(response)} characters\n"
+        generation_details += f"📝 Full Response:\n{response}\n"
+        
+        # Add prompt analysis
+        if actual_search_type == "image":
+            final_query_type = QueryType.SEARCH.value
+        else:
+            final_query_type = query_type.value
+            
+        prompt_analysis = {
+            'query_type': final_query_type,
+            'num_results': len(results),
+            'search_type': actual_search_type
+        }
+        
+        return {
+            "query": search_query, 
+            "results": results, 
+            "response": response,
+            "prompt_analysis": prompt_analysis,
+            "search_type": actual_search_type,
+            "retrieval_details": retrieval_details,
+            "augmentation_details": augmentation_details,
+            "generation_details": generation_details
+        }
+    except Exception as e:
+        error_msg = f"❌ LLM generation failed: {str(e)}"
+        generation_details += error_msg
+        return {
+            "query": search_query, 
+            "results": results, 
+            "response": "LLM unavailable - showing search results only", 
+            "search_type": actual_search_type,
+            "retrieval_details": retrieval_details,
+            "augmentation_details": augmentation_details,
+            "generation_details": generation_details
+        }
+
+
 
 
 
@@ -627,9 +801,9 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts, model_p
         # Validate inputs based on model provider
         if model_provider == "openai":
             if not OPENAI_AVAILABLE:
-                return "❌ OpenAI library not installed. Install with: pip install openai", "", []
+                return "❌ OpenAI library not installed. Install with: pip install openai", "", "", "", "", []
             if not openai_api_key or openai_api_key.strip() == "":
-                return "❌ OpenAI API key is required for OpenAI models.", "", []
+                return "❌ OpenAI API key is required for OpenAI models.", "", "", "", "", []
         
         # Determine the actual query based on inputs
         if search_type == "image" and image is not None:
@@ -642,12 +816,12 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts, model_p
             elif query.strip():
                 actual_query = query
             else:
-                return "❌ Please provide either a text query or upload an image.", "", []
+                return "❌ Please provide either a text query or upload an image.", "", "", "", "", []
         else:
-            return "❌ Please provide appropriate input for the selected search type.", "", []
+            return "❌ Please provide appropriate input for the selected search type.", "", "", "", "", []
         
-        # Run the RAG pipeline
-        rag_result = run_complete_shoes_rag_pipeline(
+        # Run the RAG pipeline with detailed tracking
+        rag_result = run_complete_shoes_rag_pipeline_with_details(
             database=".lancedb_shoes",
             table_name="myntra_shoes_enhanced",
             schema=MyntraShoesEnhanced,
@@ -660,6 +834,11 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts, model_p
             model_name=model_name,
             openai_api_key=openai_api_key if model_provider == "openai" else None
         )
+        
+        # Extract detailed step information
+        retrieval_details = rag_result.get('retrieval_details', 'No retrieval details available')
+        augmentation_details = rag_result.get('augmentation_details', 'No augmentation details available')
+        generation_details = rag_result.get('generation_details', 'No generation details available')
         
         # Format the response
         response = rag_result.get('response', 'No response generated')
@@ -699,19 +878,18 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts, model_p
             detail_text += f"   • Color: {color}\n"
             detail_text += f"   • Pattern: {pattern}\n"
             if description:
-                # Truncate description for readability
-                short_desc = description[:150] + "..." if len(description) > 150 else description
-                detail_text += f"   • Description: {short_desc}\n"
+                # Show full description without truncation
+                detail_text += f"   • Description: {description}\n"
             detail_text += "\n"
             results_details.append(detail_text)
         
         # Combine all details
         formatted_results = "".join(results_details)
         
-        return response, formatted_results, image_gallery
+        return response, formatted_results, retrieval_details, augmentation_details, generation_details, image_gallery
         
     except Exception as e:
-        return f"❌ Error: {str(e)}", "", []
+        return f"❌ Error: {str(e)}", "", "❌ Error occurred", "❌ Error occurred", "❌ Error occurred", []
 
 def create_gradio_app():
     """Create and launch the Gradio application."""
@@ -838,6 +1016,36 @@ def create_gradio_app():
         border-color: #f59e0b !important;
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
     }
+    /* RAG steps styling */
+    .rag-steps-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px solid #e2e8f0;
+    }
+    .step-box {
+        background: #ffffff;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        transition: all 0.3s ease;
+    }
+    .step-box:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+    /* Different colors for each step */
+    .retrieval-step {
+        border-left: 4px solid #10b981;
+    }
+    .augmentation-step {
+        border-left: 4px solid #3b82f6;
+    }
+    .generation-step {
+        border-left: 4px solid #8b5cf6;
+    }
     """
     
     with gr.Blocks(css=css, title="👟 Shoe RAG Pipeline") as app:
@@ -945,20 +1153,20 @@ def create_gradio_app():
             
             # Right Column - Results
             with gr.Column(scale=2, elem_classes=["results-section"]):
-                gr.HTML('<h3 class="section-header">🤖 AI Response</h3>')
+                gr.HTML('<h3 class="section-header">🤖 Final AI Response</h3>')
                 response_output = gr.Textbox(
                     label="RAG Response",
                     lines=6,
-                    max_lines=10,
+                    max_lines=20,  # Increased max lines
                     elem_classes=["output-text"],
                     show_copy_button=True
                 )
                 
-                gr.HTML('<h3 class="section-header">📊 Search Results Details</h3>')
+                gr.HTML('<h3 class="section-header">📊 Product Information</h3>')
                 results_output = gr.Textbox(
-                    label="Product Information",
+                    label="Retrieved Products Summary",
                     lines=8,
-                    max_lines=12,
+                    max_lines=25,  # Increased max lines
                     elem_classes=["output-text"],
                     show_copy_button=True
                 )
@@ -979,11 +1187,51 @@ def create_gradio_app():
                     preview=True
                 )
         
+        # RAG Pipeline Steps - Three columns for detailed breakdown
+        gr.HTML('<h2 style="text-align: center; color: #667eea; margin: 30px 0 20px 0;">🔍 RAG Pipeline Step-by-Step Breakdown</h2>')
+        
+        with gr.Row(equal_height=True, elem_classes=["rag-steps-section"]):
+            # Step 1: Retrieval
+            with gr.Column(scale=1, elem_classes=["step-box", "retrieval-step"]):
+                gr.HTML('<h3 class="section-header">🔍 Step 1: Retrieval</h3>')
+                retrieval_output = gr.Textbox(
+                    label="Vector Search & Data Retrieval",
+                    lines=15,
+                    max_lines=30,  # Increased max lines
+                    elem_classes=["output-text"],
+                    show_copy_button=True,
+                    info="Details about vector search, similarity matching, and retrieved products"
+                )
+            
+            # Step 2: Augmentation  
+            with gr.Column(scale=1, elem_classes=["step-box", "augmentation-step"]):
+                gr.HTML('<h3 class="section-header">📝 Step 2: Augmentation</h3>')
+                augmentation_output = gr.Textbox(
+                    label="Context Enhancement & Prompt Engineering",
+                    lines=15,
+                    max_lines=30,  # Increased max lines
+                    elem_classes=["output-text"],
+                    show_copy_button=True,
+                    info="Query analysis, context formatting, and prompt construction"
+                )
+            
+            # Step 3: Generation
+            with gr.Column(scale=1, elem_classes=["step-box", "generation-step"]):
+                gr.HTML('<h3 class="section-header">🤖 Step 3: Generation</h3>')
+                generation_output = gr.Textbox(
+                    label="LLM Response Generation",
+                    lines=15,
+                    max_lines=30,  # Increased max lines
+                    elem_classes=["output-text"],
+                    show_copy_button=True,
+                    info="Model setup, generation parameters, and response creation"
+                )
+        
         # Event handlers
         search_btn.click(
             fn=gradio_rag_pipeline,
             inputs=[query, image, search_type, use_advanced_prompts, model_provider, model_name, openai_api_key],
-            outputs=[response_output, results_output, image_gallery]
+            outputs=[response_output, results_output, retrieval_output, augmentation_output, generation_output, image_gallery]
         )
         
     return app
@@ -1027,7 +1275,7 @@ if __name__ == "__main__":
         app.launch(
             share=False,
             server_name="127.0.0.1",
-            server_port=7863,
+            server_port=7865,
             show_error=True
         )
         exit(0)
