@@ -15,6 +15,14 @@ from lancedb.pydantic import LanceModel, Vector
 from lancedb.embeddings import EmbeddingFunctionRegistry
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+# OpenAI imports
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("⚠️  OpenAI not installed. Install with: pip install openai")
+
 import gradio as gr
 
 
@@ -399,11 +407,45 @@ def setup_qwen_model(model_name: str = "Qwen/Qwen2.5-0.5B-Instruct") -> tuple:
     return tokenizer, model
 
 
+def setup_openai_client(api_key: str) -> OpenAI:
+    """GENERATION: Setup OpenAI client for text generation."""
+    if not OPENAI_AVAILABLE:
+        raise ImportError("OpenAI library not installed. Install with: pip install openai")
+    
+    if not api_key or api_key.strip() == "":
+        raise ValueError("OpenAI API key is required")
+    
+    client = OpenAI(api_key=api_key)
+    return client
+
+
+def get_available_models() -> Dict[str, List[str]]:
+    """Get available models for each provider."""
+    models = {
+        "qwen": [
+            "Qwen/Qwen2.5-0.5B-Instruct",
+            "Qwen/Qwen2.5-1.5B-Instruct", 
+            "Qwen/Qwen2.5-3B-Instruct",
+            "Qwen/Qwen2.5-7B-Instruct"
+        ],
+        "openai": [
+            "gpt-4o-mini",
+            "gpt-4o", 
+            "gpt-4-turbo",
+            "gpt-3.5-turbo"
+        ]
+    }
+    return models
+
+
 def generate_shoes_rag_response(
-    tokenizer,
-    model,
     query: str,
     retrieved_shoes: List[Dict[str, Any]],
+    model_provider: str = "qwen",
+    model_name: str = "Qwen/Qwen2.5-0.5B-Instruct",
+    openai_client: Optional[OpenAI] = None,
+    tokenizer=None,
+    model=None,
     max_tokens: int = 600,
     use_advanced_prompts: bool = True
 ) -> str:
@@ -429,25 +471,47 @@ Question: {query}
 
 Answer:"""
     
-    inputs = tokenizer(complete_prompt, return_tensors="pt", truncation=True, max_length=2048)
+    if model_provider == "openai":
+        if not openai_client:
+            raise ValueError("OpenAI client is required for OpenAI models")
+        
+        try:
+            response = openai_client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful shoe recommendation assistant."},
+                    {"role": "user", "content": complete_prompt}
+                ],
+                max_tokens=max_tokens,
+                temperature=0.1
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            raise Exception(f"OpenAI API error: {str(e)}")
     
-    # Ensure everything runs on CPU
-    inputs = {k: v.to('cpu') for k, v in inputs.items()}
-    
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_tokens,
-            temperature=0.1,  # Very low temperature to reduce hallucination
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id,
-            repetition_penalty=1.05,  # Minimal repetition penalty
-            no_repeat_ngram_size=2,
-            early_stopping=False
-        )
-    
-    response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-    return response.strip()
+    else:  # Qwen model
+        if not tokenizer or not model:
+            raise ValueError("Tokenizer and model are required for Qwen models")
+        
+        inputs = tokenizer(complete_prompt, return_tensors="pt", truncation=True, max_length=2048)
+        
+        # Ensure everything runs on CPU
+        inputs = {k: v.to('cpu') for k, v in inputs.items()}
+        
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_tokens,
+                temperature=0.1,  # Very low temperature to reduce hallucination
+                do_sample=True,
+                pad_token_id=tokenizer.eos_token_id,
+                repetition_penalty=1.05,  # Minimal repetition penalty
+                no_repeat_ngram_size=2,
+                early_stopping=False
+            )
+        
+        response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+        return response.strip()
 
 
 # ============================================================================
@@ -462,7 +526,10 @@ def run_complete_shoes_rag_pipeline(
     limit: int = 3,
     use_llm: bool = True,
     use_advanced_prompts: bool = True,
-    search_type: str = "auto"
+    search_type: str = "auto",
+    model_provider: str = "qwen",
+    model_name: str = "Qwen/Qwen2.5-0.5B-Instruct",
+    openai_api_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """Run complete RAG pipeline integrating Retrieval, Augmentation, and Generation."""
     
@@ -498,12 +565,27 @@ def run_complete_shoes_rag_pipeline(
         
         # SECTION 3: GENERATION - Setup LLM and generate response
         print("🤖 GENERATION: Setting up LLM and generating response...")
-        tokenizer, model = setup_qwen_model()
-        print("   └─ Model loaded successfully")
+        
+        tokenizer, model, openai_client = None, None, None
+        
+        if model_provider == "openai":
+            if not openai_api_key:
+                raise ValueError("OpenAI API key is required for OpenAI models")
+            openai_client = setup_openai_client(openai_api_key)
+            print(f"   └─ OpenAI client setup with model: {model_name}")
+        else:
+            tokenizer, model = setup_qwen_model(model_name)
+            print(f"   └─ Qwen model loaded: {model_name}")
         
         # Generate final response using augmented context
         response = generate_shoes_rag_response(
-            tokenizer, model, query_text, results, 
+            query=query_text,
+            retrieved_shoes=results,
+            model_provider=model_provider,
+            model_name=model_name,
+            openai_client=openai_client,
+            tokenizer=tokenizer,
+            model=model,
             max_tokens=200,
             use_advanced_prompts=use_advanced_prompts
         )
@@ -539,9 +621,16 @@ def run_complete_shoes_rag_pipeline(
 # GRADIO INTERFACE - Web App for RAG Pipeline
 # ============================================================================
 
-def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts):
+def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts, model_provider, model_name, openai_api_key):
     """Gradio interface function for RAG pipeline."""
     try:
+        # Validate inputs based on model provider
+        if model_provider == "openai":
+            if not OPENAI_AVAILABLE:
+                return "❌ OpenAI library not installed. Install with: pip install openai", "", []
+            if not openai_api_key or openai_api_key.strip() == "":
+                return "❌ OpenAI API key is required for OpenAI models.", "", []
+        
         # Determine the actual query based on inputs
         if search_type == "image" and image is not None:
             actual_query = image
@@ -553,9 +642,9 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts):
             elif query.strip():
                 actual_query = query
             else:
-                return "❌ Please provide either a text query or upload an image.", "", None, None, None
+                return "❌ Please provide either a text query or upload an image.", "", []
         else:
-            return "❌ Please provide appropriate input for the selected search type.", "", None, None, None
+            return "❌ Please provide appropriate input for the selected search type.", "", []
         
         # Run the RAG pipeline
         rag_result = run_complete_shoes_rag_pipeline(
@@ -566,7 +655,10 @@ def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts):
             limit=3,
             use_llm=True,
             use_advanced_prompts=use_advanced_prompts,
-            search_type=search_type
+            search_type=search_type,
+            model_provider=model_provider,
+            model_name=model_name,
+            openai_api_key=openai_api_key if model_provider == "openai" else None
         )
         
         # Format the response
@@ -729,6 +821,23 @@ def create_gradio_app():
         padding-bottom: 5px;
         margin-bottom: 15px;
     }
+    /* Model settings styling */
+    .model-settings {
+        background: #f8f9ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        border: 1px solid #e0e7ff;
+    }
+    /* API key input styling */
+    .api-key-input {
+        border: 2px solid #fbbf24 !important;
+        background: #fffbeb !important;
+    }
+    .api-key-input:focus {
+        border-color: #f59e0b !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+    }
     """
     
     with gr.Blocks(css=css, title="👟 Shoe RAG Pipeline") as app:
@@ -739,10 +848,11 @@ def create_gradio_app():
                 <div style="text-align: center;">
                     <h1>👟 Multimodal Shoe RAG Pipeline</h1>
                     <p>This demo showcases a complete <strong>Retrieval-Augmented Generation (RAG)</strong> pipeline for shoe recommendations and search.</p>
-                    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; justify-content: center; gap: 25px; margin-top: 20px; flex-wrap: wrap;">
                         <div>🔍 <strong>Text Search</strong><br/>Natural language queries</div>
                         <div>🖼️ <strong>Image Search</strong><br/>Visual similarity matching</div>
-                        <div>🤖 <strong>AI Recommendations</strong><br/>LLM-powered suggestions</div>
+                        <div>🤖 <strong>AI Models</strong><br/>Qwen & OpenAI support</div>
+                        <div>🔐 <strong>Secure API</strong><br/>Protected key handling</div>
                         <div>📊 <strong>Structured Results</strong><br/>Detailed product information</div>
                     </div>
                 </div>
@@ -774,6 +884,38 @@ def create_gradio_app():
                         info="Auto-detect or force specific search type"
                     )
                 
+                gr.HTML('<h3 class="section-header">🤖 AI Model Settings</h3>')
+                
+                # Model provider selection
+                provider_choices = ["qwen"]
+                if OPENAI_AVAILABLE:
+                    provider_choices.append("openai")
+                
+                model_provider = gr.Radio(
+                    choices=provider_choices,
+                    value="qwen",
+                    label="Model Provider",
+                    info="Choose between local Qwen models or OpenAI API" + ("" if OPENAI_AVAILABLE else " (OpenAI not available - install with: pip install openai)")
+                )
+                
+                # Model selection dropdown - will be updated based on provider
+                available_models = get_available_models()
+                model_name = gr.Dropdown(
+                    choices=available_models["qwen"],
+                    value="Qwen/Qwen2.5-0.5B-Instruct",
+                    label="Model Name",
+                    info="Select the specific model to use"
+                )
+                
+                # OpenAI API Key input (hidden by default)
+                openai_api_key = gr.Textbox(
+                    label="OpenAI API Key",
+                    placeholder="Enter your OpenAI API key (required for OpenAI models)",
+                    type="password",
+                    visible=False,
+                    info="Your API key is secure and not stored"
+                )
+                
                 use_advanced_prompts = gr.Checkbox(
                     value=True,
                     label="Use Advanced Prompts",
@@ -785,6 +927,20 @@ def create_gradio_app():
                     variant="primary", 
                     size="lg",
                     elem_classes=["primary-button"]
+                )
+                
+                # JavaScript to update model choices and show/hide API key based on provider
+                def update_model_choices(provider):
+                    models = get_available_models()
+                    choices = models[provider]
+                    default_value = choices[0]
+                    api_key_visible = (provider == "openai")
+                    return gr.Dropdown(choices=choices, value=default_value), gr.Textbox(visible=api_key_visible)
+                
+                model_provider.change(
+                    fn=update_model_choices,
+                    inputs=[model_provider],
+                    outputs=[model_name, openai_api_key]
                 )
             
             # Right Column - Results
@@ -826,7 +982,7 @@ def create_gradio_app():
         # Event handlers
         search_btn.click(
             fn=gradio_rag_pipeline,
-            inputs=[query, image, search_type, use_advanced_prompts],
+            inputs=[query, image, search_type, use_advanced_prompts, model_provider, model_name, openai_api_key],
             outputs=[response_output, results_output, image_gallery]
         )
         
@@ -842,6 +998,12 @@ if __name__ == "__main__":
     parser.add_argument("--basic-prompts", action="store_true", help="Use basic prompts instead of advanced")
     parser.add_argument("--search-type", choices=["auto", "text", "image"], default="auto", 
                        help="Force search type (default: auto-detect)")
+    parser.add_argument("--model-provider", choices=["qwen", "openai"], default="qwen",
+                       help="Model provider to use (default: qwen)")
+    parser.add_argument("--model-name", type=str, 
+                       help="Model name to use (defaults based on provider)")
+    parser.add_argument("--openai-api-key", type=str, 
+                       help="OpenAI API key (required for OpenAI models)")
     parser.add_argument("--gradio", action="store_true", help="Launch Gradio web interface")
     parser.add_argument("--setup-db", action="store_true", help="Setup database from HuggingFace dataset")
     args = parser.parse_args()
@@ -865,7 +1027,7 @@ if __name__ == "__main__":
         app.launch(
             share=False,
             server_name="127.0.0.1",
-            server_port=7862,
+            server_port=7863,
             show_error=True
         )
         exit(0)
@@ -874,17 +1036,31 @@ if __name__ == "__main__":
     if not args.query:
         print("❌ Please provide a query using --query, or use --gradio for web interface")
         print("\nExample usage:")
-        print("  # Command line search")
+        print("  # Command line search with Qwen (default)")
         print("  python script.py --query 'recommend running shoes for men'")
+        print("  # Command line search with OpenAI")
+        print("  python script.py --query 'recommend running shoes for men' --model-provider openai --openai-api-key YOUR_KEY")
         print("  # Launch web interface")
         print("  python script.py --gradio")
         print("  # Setup database first")
         print("  python script.py --setup-db")
         exit(1)
     
+    # Set default model names based on provider
+    available_models = get_available_models()
+    if not args.model_name:
+        args.model_name = available_models[args.model_provider][0]
+    
+    # Validate OpenAI setup
+    if args.model_provider == "openai" and not args.openai_api_key:
+        print("❌ OpenAI API key is required for OpenAI models. Use --openai-api-key")
+        exit(1)
+    
     # Single query processing
     print("🚀 Starting Complete RAG Pipeline...")
     print("=" * 60)
+    print(f"Model Provider: {args.model_provider}")
+    print(f"Model Name: {args.model_name}")
     
     rag_result = run_complete_shoes_rag_pipeline(
         database=".lancedb_shoes",
@@ -894,7 +1070,10 @@ if __name__ == "__main__":
         limit=3,
         use_llm=True,
         use_advanced_prompts=not args.basic_prompts,
-        search_type=args.search_type
+        search_type=args.search_type,
+        model_provider=args.model_provider,
+        model_name=args.model_name,
+        openai_api_key=args.openai_api_key
     )
     
     # Display results
