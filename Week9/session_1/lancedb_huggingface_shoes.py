@@ -15,6 +15,8 @@ from lancedb.pydantic import LanceModel, Vector
 from lancedb.embeddings import EmbeddingFunctionRegistry
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+import gradio as gr
+
 
 # ============================================================================
 # SECTION 1: RETRIEVAL - Vector Search and Data Management
@@ -534,34 +536,350 @@ def run_complete_shoes_rag_pipeline(
 
 
 # ============================================================================
-# MAIN EXECUTION
+# GRADIO INTERFACE - Web App for RAG Pipeline
+# ============================================================================
+
+def gradio_rag_pipeline(query, image, search_type, use_advanced_prompts):
+    """Gradio interface function for RAG pipeline."""
+    try:
+        # Determine the actual query based on inputs
+        if search_type == "image" and image is not None:
+            actual_query = image
+        elif search_type == "text" and query.strip():
+            actual_query = query
+        elif search_type == "auto":
+            if image is not None:
+                actual_query = image
+            elif query.strip():
+                actual_query = query
+            else:
+                return "❌ Please provide either a text query or upload an image.", "", None, None, None
+        else:
+            return "❌ Please provide appropriate input for the selected search type.", "", None, None, None
+        
+        # Run the RAG pipeline
+        rag_result = run_complete_shoes_rag_pipeline(
+            database=".lancedb_shoes",
+            table_name="myntra_shoes_enhanced",
+            schema=MyntraShoesEnhanced,
+            search_query=actual_query,
+            limit=3,
+            use_llm=True,
+            use_advanced_prompts=use_advanced_prompts,
+            search_type=search_type
+        )
+        
+        # Format the response
+        response = rag_result.get('response', 'No response generated')
+        search_type_used = rag_result.get('search_type', 'unknown')
+        
+        # Format results for display
+        results_text = f"🔍 Search Type: {search_type_used}\n\n"
+        if rag_result.get('prompt_analysis'):
+            results_text += f"📝 Query Type: {rag_result['prompt_analysis']['query_type']}\n"
+            results_text += f"📊 Results Found: {rag_result['prompt_analysis']['num_results']}\n\n"
+        
+        # Prepare image gallery data
+        image_gallery = []
+        results_details = []
+        
+        for i, result in enumerate(rag_result['results'], 1):
+            product_type = result.get('product_type', 'Shoe')
+            gender = result.get('gender', 'Unisex')
+            color = result.get('color', 'Various colors')
+            pattern = result.get('pattern', 'Standard')
+            description = result.get('description', 'No description available')
+            image_path = result.get('image_path')
+            
+            # Add to gallery if image exists
+            if image_path and os.path.exists(image_path):
+                # Create detailed caption for the image
+                caption = f"#{i} - {product_type} for {gender}"
+                if color and color not in ['None', None, '']:
+                    caption += f" | Color: {color}"
+                if pattern and pattern not in ['None', None, '']:
+                    caption += f" | Pattern: {pattern}"
+                
+                image_gallery.append((image_path, caption))
+            
+            # Format detailed description
+            detail_text = f"**{i}. {product_type} for {gender}**\n"
+            detail_text += f"   • Color: {color}\n"
+            detail_text += f"   • Pattern: {pattern}\n"
+            if description:
+                # Truncate description for readability
+                short_desc = description[:150] + "..." if len(description) > 150 else description
+                detail_text += f"   • Description: {short_desc}\n"
+            detail_text += "\n"
+            results_details.append(detail_text)
+        
+        # Combine all details
+        formatted_results = "".join(results_details)
+        
+        return response, formatted_results, image_gallery
+        
+    except Exception as e:
+        return f"❌ Error: {str(e)}", "", []
+
+def create_gradio_app():
+    """Create and launch the Gradio application."""
+    
+    # Custom CSS for better styling
+    css = """
+    .gradio-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        background: #f5f5f5;
+    }
+    .main {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    /* Header styling */
+    .header-section {
+        text-align: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .header-section h1 {
+        font-size: 2.5em;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .header-section p {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+        opacity: 0.95;
+    }
+    .output-text {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+    }
+    .gallery-container {
+        margin-top: 15px;
+        width: 100%;
+    }
+    .search-section {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        height: fit-content;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+    .results-section {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        height: fit-content;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .gallery-section {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        margin-top: 20px;
+        width: 100%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    /* Improve text readability */
+    .gradio-textbox textarea {
+        background: #fafafa !important;
+        border: 1px solid #ddd !important;
+        color: #333 !important;
+    }
+    .gradio-textbox textarea:focus {
+        background: #ffffff !important;
+        border-color: #667eea !important;
+    }
+    /* Make gallery images larger */
+    .gallery img {
+        max-height: 300px !important;
+        object-fit: contain !important;
+    }
+    /* Improve button styling */
+    .primary-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+    }
+    .primary-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+    }
+    /* Section headers */
+    .section-header {
+        color: #667eea;
+        font-weight: bold;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+    }
+    """
+    
+    with gr.Blocks(css=css, title="👟 Shoe RAG Pipeline") as app:
+        # Header Section
+        with gr.Row():
+            with gr.Column(elem_classes=["header-section"]):
+                gr.HTML("""
+                <div style="text-align: center;">
+                    <h1>👟 Multimodal Shoe RAG Pipeline</h1>
+                    <p>This demo showcases a complete <strong>Retrieval-Augmented Generation (RAG)</strong> pipeline for shoe recommendations and search.</p>
+                    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
+                        <div>🔍 <strong>Text Search</strong><br/>Natural language queries</div>
+                        <div>🖼️ <strong>Image Search</strong><br/>Visual similarity matching</div>
+                        <div>🤖 <strong>AI Recommendations</strong><br/>LLM-powered suggestions</div>
+                        <div>📊 <strong>Structured Results</strong><br/>Detailed product information</div>
+                    </div>
+                </div>
+                """)
+        
+        with gr.Row(equal_height=False):
+            # Left Column - Search Input
+            with gr.Column(scale=1, elem_classes=["search-section"]):
+                gr.HTML('<h3 class="section-header">🔍 Search Input</h3>')
+                
+                query = gr.Textbox(
+                    label="Text Query",
+                    placeholder="e.g., 'Recommend running shoes for men' or 'Show me casual sneakers'",
+                    lines=4,
+                    max_lines=6
+                )
+                
+                image = gr.Image(
+                    label="Upload Shoe Image (for image search)",
+                    type="pil",
+                    height=220
+                )
+                
+                with gr.Row():
+                    search_type = gr.Radio(
+                        choices=["auto", "text", "image"],
+                        value="auto",
+                        label="Search Type",
+                        info="Auto-detect or force specific search type"
+                    )
+                
+                use_advanced_prompts = gr.Checkbox(
+                    value=True,
+                    label="Use Advanced Prompts",
+                    info="Enable enhanced prompt engineering for better responses"
+                )
+                
+                search_btn = gr.Button(
+                    "🔍 Search", 
+                    variant="primary", 
+                    size="lg",
+                    elem_classes=["primary-button"]
+                )
+            
+            # Right Column - Results
+            with gr.Column(scale=2, elem_classes=["results-section"]):
+                gr.HTML('<h3 class="section-header">🤖 AI Response</h3>')
+                response_output = gr.Textbox(
+                    label="RAG Response",
+                    lines=6,
+                    max_lines=10,
+                    elem_classes=["output-text"],
+                    show_copy_button=True
+                )
+                
+                gr.HTML('<h3 class="section-header">📊 Search Results Details</h3>')
+                results_output = gr.Textbox(
+                    label="Product Information",
+                    lines=8,
+                    max_lines=12,
+                    elem_classes=["output-text"],
+                    show_copy_button=True
+                )
+        
+        # Full width section for image gallery
+        with gr.Row():
+            with gr.Column(elem_classes=["gallery-section"]):
+                gr.HTML('<h3 class="section-header">🖼️ Retrieved Shoe Images</h3>')
+                image_gallery = gr.Gallery(
+                    label="Search Results Gallery",
+                    show_label=False,
+                    elem_id="gallery",
+                    columns=3,
+                    rows=1,
+                    object_fit="contain",
+                    height=350,
+                    elem_classes=["gallery-container"],
+                    preview=True
+                )
+        
+        # Event handlers
+        search_btn.click(
+            fn=gradio_rag_pipeline,
+            inputs=[query, image, search_type, use_advanced_prompts],
+            outputs=[response_output, results_output, image_gallery]
+        )
+        
+    return app
+
+# ============================================================================
+# MAIN EXECUTION WITH GRADIO OPTION
 # ============================================================================
 
 if __name__ == "__main__":
-    # Create shoes table from Hugging Face dataset
-    # create_shoes_table_from_hf(
-    #     database=".lancedb_shoes",
-    #     table_name="myntra_shoes_enhanced",
-    #     sample_size=500,
-    #     save_images=True
-    # )
-
     parser = argparse.ArgumentParser(description="Run RAG pipeline for shoes with text and image search")
     parser.add_argument("--query", type=str, help="Search query (text) or image file path")
     parser.add_argument("--basic-prompts", action="store_true", help="Use basic prompts instead of advanced")
     parser.add_argument("--search-type", choices=["auto", "text", "image"], default="auto", 
                        help="Force search type (default: auto-detect)")
+    parser.add_argument("--gradio", action="store_true", help="Launch Gradio web interface")
+    parser.add_argument("--setup-db", action="store_true", help="Setup database from HuggingFace dataset")
     args = parser.parse_args()
     
+    # Setup database if requested
+    if args.setup_db:
+        print("🔄 Setting up database from HuggingFace dataset...")
+        create_shoes_table_from_hf(
+            database=".lancedb_shoes",
+            table_name="myntra_shoes_enhanced",
+            sample_size=500,
+            save_images=True
+        )
+        print("✅ Database setup complete!")
+        exit(0)
+    
+    # Launch Gradio interface if requested
+    if args.gradio:
+        print("🚀 Launching Gradio interface...")
+        app = create_gradio_app()
+        app.launch(
+            share=False,
+            server_name="127.0.0.1",
+            server_port=7862,
+            show_error=True
+        )
+        exit(0)
+    
+    # Command line interface
     if not args.query:
-        print("❌ Please provide a query using --query")
+        print("❌ Please provide a query using --query, or use --gradio for web interface")
         print("\nExample usage:")
-        print("  # Text search")
+        print("  # Command line search")
         print("  python script.py --query 'recommend running shoes for men'")
-        print("  # Image search (auto-detected)")
-        print("  python script.py --query 'path/to/shoe_image.jpg'")
-        print("  # Force image search")
-        print("  python script.py --query 'shoe_image.jpg' --search-type image")
+        print("  # Launch web interface")
+        print("  python script.py --gradio")
+        print("  # Setup database first")
+        print("  python script.py --setup-db")
         exit(1)
     
     # Single query processing
