@@ -1,6 +1,8 @@
 """
 SCRIPT 2/5: augmenter.py - Context Enhancement and Prompt Engineering for Shoe RAG Pipeline
 
+Colab - https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing
+
 This script handles the AUGMENTATION phase of the RAG pipeline, including:
 - Query classification and analysis
 - Context formatting and enhancement

@@ -1,6 +1,8 @@
 """
 SCRIPT 5/5: app.py - Gradio Web Interface for Shoe RAG Pipeline
 
+Colab - https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing
+
 This script provides a web-based interface for the complete RAG pipeline using Gradio.
 It integrates all components (retrieval, augmentation, generation) into a user-friendly web app.
 

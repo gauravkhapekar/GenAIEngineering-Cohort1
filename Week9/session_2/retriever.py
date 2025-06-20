@@ -1,6 +1,8 @@
 """
 SCRIPT 1/5: retriever.py - Vector Search and Data Management for Shoe RAG Pipeline
 
+Colab - https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing
+
 This script handles the RETRIEVAL phase of the RAG pipeline, including:
 - Setting up vector embeddings using OpenAI CLIP model
 - Creating and managing LanceDB vector database
@@ -22,7 +24,7 @@ Required Dependencies:
 
 Commands to run:
 # Setup database from HuggingFace dataset
-python retriever.py --setup-db --database ./myntra_shoes_db --table myntra_shoes_table --sample-size 500
+python retriever.py --setup-db --database myntra_shoes_db --table myntra_shoes_table --sample-size 500
 
 # Test vector search with text query
 python retriever.py --query "running shoes for men" --limit 5

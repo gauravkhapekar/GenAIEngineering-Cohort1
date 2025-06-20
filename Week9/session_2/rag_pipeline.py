@@ -1,6 +1,8 @@
 """
 SCRIPT 4/5: rag_pipeline.py - Complete RAG Pipeline Integration for Shoe Search
 
+Colab - https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing
+
 This script integrates all three phases of the RAG pipeline:
 1. RETRIEVAL: Vector search and data management (from retriever.py)
 2. AUGMENTATION: Context enhancement and prompt engineering (from augmenter.py)

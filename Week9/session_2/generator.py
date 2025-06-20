@@ -1,6 +1,8 @@
 """
 SCRIPT 3/5: generator.py - LLM Setup and Response Generation for Shoe RAG Pipeline
 
+Colab - https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing
+
 This script handles the GENERATION phase of the RAG pipeline, including:
 - Setting up different LLM providers (Qwen, OpenAI)
 - Managing model configurations and parameters
@@ -48,6 +50,8 @@ from typing import Dict, List, Optional
 import torch
 from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from augmenter import get_real_shoes_data, detect_search_type
 
 
 def setup_qwen_model(model_name: str = "Qwen/Qwen2.5-0.5B-Instruct") -> tuple:
@@ -167,51 +171,6 @@ Answer:"""
             outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
         )
         return response.strip()
-
-
-def get_real_shoes_data(
-    query: str,
-    search_type: str = "text",
-    database: str = "myntra_shoes_db",
-    table_name: str = "myntra_shoes_table",
-    limit: int = 3,
-) -> List[Dict[str, any]]:
-    """Get real shoes data from retriever for testing purposes."""
-
-    try:
-        from retriever import MyntraShoesEnhanced, run_shoes_search
-
-        results, _ = run_shoes_search(
-            database=database,
-            table_name=table_name,
-            schema=MyntraShoesEnhanced,
-            search_query=query,
-            limit=limit,
-            search_type=search_type,
-            output_folder="output_generator",
-        )
-        return results
-    except Exception as e:
-        raise Exception(
-            f"Could not retrieve real data: {e}. Please ensure the database is set up correctly."
-        )
-
-
-def detect_search_type(search_query) -> str:
-    """Auto-detect search type based on query content (matches retriever.py logic)."""
-    # Auto-detect search type
-    if isinstance(search_query, str):
-        if search_query.endswith((".jpg", ".jpeg", ".png", ".bmp", ".gif")):
-            # Image file path
-            return "image"
-        else:
-            # Text query
-            return "text"
-    elif hasattr(search_query, "save"):  # PIL Image object
-        return "image"
-    else:
-        return "text"
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
