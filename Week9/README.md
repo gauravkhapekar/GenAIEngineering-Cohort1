@@ -120,8 +120,8 @@ Week9
    - Building searchable product catalogs
 
 4. **Applications Built:**
-   - **food_app.py**: [Colab](https://colab.research.google.com/drive/1GKJUa7zI9Ei0IkgNzRlBEhijdILhdymc?usp=sharing) Food product generation and analysis
-   - **product_cataloger_app.py**: [Colab](https://colab.research.google.com/drive/1eFNaidx5TPEhXgzdY9hh7EhDcVZm4GMS?usp=sharing) Advanced product cataloging
+   - **food_app.py**: [Colab](https://colab.research.google.com/drive/1GKJUa7zI9Ei0IkgNzRlBEhijdILhdymc?usp=sharing) [HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-food-image-generation-and-analysis) Food product generation and analysis
+   - **product_cataloger_app.py**: [Colab](https://colab.research.google.com/drive/1eFNaidx5TPEhXgzdY9hh7EhDcVZm4GMS?usp=sharing) [HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-product-cataloger) Advanced product cataloging
 
 ### Session 2: Complete RAG Pipeline Implementation
 
@@ -133,6 +133,8 @@ Week9
 - `augmenter.py`: Context enhancement and prompt engineering
   
 [Colab Notebook](https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing)
+  
+[HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-myntra-shoes-rag-pipeline)
   
 #### Key Components:
 

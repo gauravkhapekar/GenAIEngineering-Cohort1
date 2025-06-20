@@ -4,6 +4,8 @@ Multimodal AI for Food Delivery Business
 
 Google Colab - https://colab.research.google.com/drive/1GKJUa7zI9Ei0IkgNzRlBEhijdILhdymc?usp=sharing
 
+HuggingFace Spaces - https://huggingface.co/spaces/ishandutta/multimodal-food-image-generation-and-analysis
+
 This app generates food images and analyzes them for safety
 using Stable Diffusion and BLIP models.
 
