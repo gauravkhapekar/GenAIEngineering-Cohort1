@@ -45,13 +45,7 @@ from rag_pipeline import run_complete_shoes_rag_pipeline_with_details
 # Import components from other modules
 from retriever import MyntraShoesEnhanced, create_shoes_table_from_hf
 
-# OpenAI imports
-try:
-    from openai import OpenAI
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
+from openai import OpenAI
 
 
 def gradio_rag_pipeline(
@@ -67,15 +61,6 @@ def gradio_rag_pipeline(
     try:
         # Validate inputs based on model provider
         if model_provider == "openai":
-            if not OPENAI_AVAILABLE:
-                return (
-                    "❌ OpenAI library not installed. Install with: pip install openai",
-                    "",
-                    "",
-                    "",
-                    "",
-                    [],
-                )
             if not openai_api_key or openai_api_key.strip() == "":
                 return (
                     "❌ OpenAI API key is required for OpenAI models.",
@@ -85,6 +70,20 @@ def gradio_rag_pipeline(
                     "",
                     [],
                 )
+
+        # Check if both text and image inputs are provided - this is not allowed
+        has_text_input = query and query.strip()
+        has_image_input = image is not None
+        
+        if has_text_input and has_image_input:
+            return (
+                "❌ Error: Please provide either a text query OR an image, not both. Choose one input type at a time.",
+                "",
+                "",
+                "",
+                "",
+                [],
+            )
 
         # Determine the actual query based on inputs
         if search_type == "image" and image is not None:
@@ -415,20 +414,13 @@ def create_gradio_app():
                 gr.HTML('<h3 class="section-header">🤖 AI Model Settings</h3>')
 
                 # Model provider selection
-                provider_choices = ["qwen"]
-                if OPENAI_AVAILABLE:
-                    provider_choices.append("openai")
+                provider_choices = ["qwen", "openai"]
 
                 model_provider = gr.Radio(
                     choices=provider_choices,
                     value="qwen",
                     label="Model Provider",
                     info="Choose between local Qwen models or OpenAI API"
-                    + (
-                        ""
-                        if OPENAI_AVAILABLE
-                        else " (OpenAI not available - install with: pip install openai)"
-                    ),
                 )
 
                 # Model selection dropdown - will be updated based on provider
