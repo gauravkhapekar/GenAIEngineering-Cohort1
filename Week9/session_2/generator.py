@@ -48,10 +48,9 @@ import argparse
 from typing import Dict, List, Optional
 
 import torch
+from augmenter import detect_search_type, get_real_shoes_data
 from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
-from augmenter import detect_search_type, get_real_shoes_data
 
 
 def setup_qwen_model(model_name: str = "Qwen/Qwen2.5-0.5B-Instruct") -> tuple:

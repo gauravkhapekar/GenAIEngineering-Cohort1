@@ -41,9 +41,6 @@ python rag_pipeline.py --query "recommend me men's running shoes" --no-llm
 import argparse
 from typing import Any, Dict, List, Optional
 
-from openai import OpenAI
-from PIL import Image
-
 from augmenter import QueryType, SimpleShoePrompts
 from generator import (
     generate_shoes_rag_response,
@@ -51,6 +48,8 @@ from generator import (
     setup_openai_client,
     setup_qwen_model,
 )
+from openai import OpenAI
+from PIL import Image
 
 # Import components from other modules
 from retriever import MyntraShoesEnhanced, create_shoes_table_from_hf, run_shoes_search

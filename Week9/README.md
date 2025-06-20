@@ -76,6 +76,8 @@ python -c "import lancedb; import torch; import transformers; import gradio; pri
 
 ### Session 1: LanceDB Multimodal Fashion Search Engine
 
+**Gradio Introduction Notebook"** `introduction_to_gradio.ipynb` [Colab](https://colab.research.google.com/drive/13d7MRgylFJZ9NCrfLeK0_mD1nh_Qx3d7?usp=sharing)
+
 **Main Notebook:** `lancedb_multimodal_myntra_fashion_search_engine.ipynb` [Colab](https://colab.research.google.com/drive/17CNo2rkbFYaIYcS5_ABd-fimBDWBi0C7?usp=sharing)
 
 #### Data Requirements for lancedb_multimodal_myntra_fashion_search_engine.ipynb:

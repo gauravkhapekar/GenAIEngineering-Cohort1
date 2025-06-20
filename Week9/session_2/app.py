@@ -40,9 +40,8 @@ import os
 from typing import Any, Dict, List, Optional
 
 import gradio as gr
-from openai import OpenAI
-
 from generator import get_available_models
+from openai import OpenAI
 from rag_pipeline import run_complete_shoes_rag_pipeline_with_details
 
 # Import components from other modules
