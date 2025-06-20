@@ -51,7 +51,7 @@ import torch
 from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from augmenter import get_real_shoes_data, detect_search_type
+from augmenter import detect_search_type, get_real_shoes_data
 
 
 def setup_qwen_model(model_name: str = "Qwen/Qwen2.5-0.5B-Instruct") -> tuple:
@@ -171,6 +171,7 @@ Answer:"""
             outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
         )
         return response.strip()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

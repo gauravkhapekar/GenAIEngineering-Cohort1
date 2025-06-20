@@ -19,6 +19,9 @@ Required Dependencies:
 - Custom CSS for styling
 
 Commands to run:
+# Setup database and launch app
+python app.py --setup-db
+
 # Launch Gradio web interface
 python app.py
 
@@ -30,9 +33,6 @@ python app.py --share
 
 # Launch with custom host
 python app.py --host 0.0.0.0 --port 8080
-
-# Setup database and launch app
-python app.py --setup-db
 """
 
 import argparse
@@ -40,6 +40,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 import gradio as gr
+from openai import OpenAI
 
 from generator import get_available_models
 from rag_pipeline import run_complete_shoes_rag_pipeline_with_details
@@ -47,7 +48,18 @@ from rag_pipeline import run_complete_shoes_rag_pipeline_with_details
 # Import components from other modules
 from retriever import MyntraShoesEnhanced, create_shoes_table_from_hf
 
-from openai import OpenAI
+
+def is_huggingface_space():
+    """
+    Checks if the code is running within a Hugging Face Spaces environment.
+
+    Returns:
+        bool: True if running in HF Spaces, False otherwise.
+    """
+    if os.environ.get("SYSTEM") == "spaces":
+        return True
+    else:
+        return False
 
 
 def gradio_rag_pipeline(
@@ -76,7 +88,7 @@ def gradio_rag_pipeline(
         # Check if both text and image inputs are provided - this is not allowed
         has_text_input = query and query.strip()
         has_image_input = image is not None
-        
+
         if has_text_input and has_image_input:
             return (
                 "❌ Error: Please provide either a text query OR an image, not both. Choose one input type at a time.",
@@ -422,7 +434,7 @@ def create_gradio_app():
                     choices=provider_choices,
                     value="qwen",
                     label="Model Provider",
-                    info="Choose between local Qwen models or OpenAI API"
+                    info="Choose between local Qwen models or OpenAI API",
                 )
 
                 # Model selection dropdown - will be updated based on provider
@@ -576,27 +588,66 @@ def create_gradio_app():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Gradio Web Interface for Shoe RAG Pipeline"
-    )
-    parser.add_argument(
-        "--setup-db",
-        action="store_true",
-        help="Setup database from HuggingFace dataset",
-    )
-    parser.add_argument(
-        "--sample-size", type=int, default=500, help="Sample size for database setup"
-    )
-    parser.add_argument(
-        "--host", type=str, default="127.0.0.1", help="Host to run the server on"
-    )
-    parser.add_argument(
-        "--port", type=int, default=7865, help="Port to run the server on"
-    )
-    parser.add_argument("--share", action="store_true", help="Create a public link")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    # Check if running in Hugging Face Spaces
+    if is_huggingface_space():
+        print("🤗 Detected Hugging Face Spaces environment")
+        print("📋 Using default configuration for HF Spaces...")
 
-    args = parser.parse_args()
+        # Use default values for HF Spaces
+        class DefaultArgs:
+            def __init__(self):
+                self.setup_db = True  # Don't setup DB by default in HF Spaces
+                self.sample_size = 500
+                self.host = "0.0.0.0"  # Use 0.0.0.0 for HF Spaces
+                self.port = 7860  # Standard port for HF Spaces
+                self.share = False  # HF Spaces handles sharing automatically
+                self.debug = False
+
+        args = DefaultArgs()
+
+        print("🔧 HF Spaces Configuration:")
+        print(f"   Setup DB: {args.setup_db}")
+        print(f"   Host: {args.host}")
+        print(f"   Port: {args.port}")
+        print(f"   Share: {args.share}")
+        print(f"   Debug: {args.debug}")
+
+    else:
+        print("💻 Detected local environment")
+        print("📋 Using command line arguments...")
+
+        # Use argparse for local development
+        parser = argparse.ArgumentParser(
+            description="Gradio Web Interface for Shoe RAG Pipeline"
+        )
+        parser.add_argument(
+            "--setup-db",
+            action="store_true",
+            help="Setup database from HuggingFace dataset",
+        )
+        parser.add_argument(
+            "--sample-size",
+            type=int,
+            default=500,
+            help="Sample size for database setup",
+        )
+        parser.add_argument(
+            "--host", type=str, default="127.0.0.1", help="Host to run the server on"
+        )
+        parser.add_argument(
+            "--port", type=int, default=7865, help="Port to run the server on"
+        )
+        parser.add_argument("--share", action="store_true", help="Create a public link")
+        parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+
+        args = parser.parse_args()
+
+        print("🔧 Local Configuration:")
+        print(f"   Setup DB: {args.setup_db}")
+        print(f"   Host: {args.host}")
+        print(f"   Port: {args.port}")
+        print(f"   Share: {args.share}")
+        print(f"   Debug: {args.debug}")
 
     # Setup database if requested
     if args.setup_db:
@@ -623,12 +674,15 @@ if __name__ == "__main__":
         show_error=args.debug,
     )
 
-    print("\nExample usage:")
-    print("  # Launch with default settings")
-    print("  python app.py")
-    print("  # Setup database and launch")
-    print("  python app.py --setup-db")
-    print("  # Launch with public sharing")
-    print("  python app.py --share")
-    print("  # Launch on custom port")
-    print("  python app.py --port 8080")
+    if not is_huggingface_space():
+        print("\nExample usage:")
+        print("  # Launch with default settings")
+        print("  python app.py")
+        print("  # Setup database and launch")
+        print("  python app.py --setup-db")
+        print("  # Launch with public sharing")
+        print("  python app.py --share")
+        print("  # Launch on custom port")
+        print("  python app.py --port 8080")
+    else:
+        print("\n🤗 Running in Hugging Face Spaces - configuration is automatic!")
