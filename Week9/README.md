@@ -76,6 +76,8 @@ python -c "import lancedb; import torch; import transformers; import gradio; pri
 
 ### Session 1: LanceDB Multimodal Fashion Search Engine
 
+**Gradio Introduction Notebook"** `introduction_to_gradio.ipynb` [Colab](https://colab.research.google.com/drive/13d7MRgylFJZ9NCrfLeK0_mD1nh_Qx3d7?usp=sharing)
+
 **Main Notebook:** `lancedb_multimodal_myntra_fashion_search_engine.ipynb` [Colab](https://colab.research.google.com/drive/17CNo2rkbFYaIYcS5_ABd-fimBDWBi0C7?usp=sharing)
 
 #### Data Requirements for lancedb_multimodal_myntra_fashion_search_engine.ipynb:
@@ -118,8 +120,8 @@ Week9
    - Building searchable product catalogs
 
 4. **Applications Built:**
-   - **food_app.py**: [Colab](https://colab.research.google.com/drive/1GKJUa7zI9Ei0IkgNzRlBEhijdILhdymc?usp=sharing) Food product generation and analysis
-   - **product_cataloger_app.py**: [Colab](https://colab.research.google.com/drive/1eFNaidx5TPEhXgzdY9hh7EhDcVZm4GMS?usp=sharing) Advanced product cataloging
+   - **food_app.py**: [Colab](https://colab.research.google.com/drive/1GKJUa7zI9Ei0IkgNzRlBEhijdILhdymc?usp=sharing) [HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-food-image-generation-and-analysis) Food product generation and analysis
+   - **product_cataloger_app.py**: [Colab](https://colab.research.google.com/drive/1eFNaidx5TPEhXgzdY9hh7EhDcVZm4GMS?usp=sharing) [HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-product-cataloger) Advanced product cataloging
 
 ### Session 2: Complete RAG Pipeline Implementation
 
@@ -131,6 +133,8 @@ Week9
 - `augmenter.py`: Context enhancement and prompt engineering
   
 [Colab Notebook](https://colab.research.google.com/drive/1rq-ywjykHBw7xPXCmd3DmZdK6T9bhDtA?usp=sharing)
+  
+[HuggingFace Spaces](https://huggingface.co/spaces/ishandutta/multimodal-myntra-shoes-rag-pipeline)
   
 #### Key Components:
 

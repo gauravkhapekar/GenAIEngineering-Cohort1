@@ -4,6 +4,8 @@ Multimodal AI for E-commerce Product Analysis
 
 Google Colab - https://colab.research.google.com/drive/1eFNaidx5TPEhXgzdY9hh7EhDcVZm4GMS?usp=sharing
 
+HuggingFace Spaces - https://huggingface.co/spaces/ishandutta/multimodal-product-cataloger
+
 This app analyzes product images and generates metadata for e-commerce
 listings using CLIP and BLIP models.
 
