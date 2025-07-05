@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Calculator Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .title p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .architecture {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .streamlit-component {
+            background: white;
+            border: 3px solid #FF6B6B;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #FF6B6B10, #FF6B6B05);
+            min-width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .streamlit-component:hover {
+            transform: scale(1.05);
+        }
+
+        .fastapi-wrapper {
+            background: linear-gradient(135deg, #4834D415, #4834D408);
+            border: 4px solid #4834D4;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            min-width: 450px;
+        }
+
+        .wrapper-title {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4834D4;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .wrapper-port {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #f39c12;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .internal-components {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .internal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid;
+        }
+
+        .mcp-client-internal {
+            border-color: #686de0;
+            background: linear-gradient(135deg, #686de010, #686de005);
+        }
+
+        .mcp-server-internal {
+            border-color: #00D2D3;
+            background: linear-gradient(135deg, #00D2D310, #00D2D305);
+        }
+
+        .component-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .component-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .component-subtitle {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .port-badge {
+            background: #95a5a6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.7em;
+            display: inline-block;
+        }
+
+        .streamlit-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .streamlit-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .streamlit-subtitle {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .streamlit-port {
+            background: #f39c12;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #3498db;
+        }
+
+        .arrow-line {
+            font-size: 3em;
+            animation: pulse 2s infinite;
+        }
+
+        .arrow-label {
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 8px;
+            white-space: nowrap;
+        }
+
+        .internal-arrow {
+            font-size: 1.5em;
+            color: #7f8c8d;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        .info-flow {
+            background: #ecf0f1;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .info-flow h3 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .flow-step {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid;
+        }
+
+        .flow-step:nth-child(1) {
+            border-top-color: #FF6B6B;
+        }
+
+        .flow-step:nth-child(2) {
+            border-top-color: #4834D4;
+        }
+
+        .flow-step:nth-child(3) {
+            border-top-color: #686de0;
+        }
+
+        .flow-step:nth-child(4) {
+            border-top-color: #00D2D3;
+        }
+
+        .flow-step h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .flow-step p {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+
+        .flow-number {
+            background: #3498db;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8em;
+            margin: 0 auto 8px;
+        }
+
+        .separation-note {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .separation-note strong {
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .fastapi-wrapper {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .internal-components {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .arrow-line {
+                transform: rotate(90deg);
+            }
+
+            .flow-steps {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="title">
+            <h1>🧮 MCP Calculator Architecture</h1>
+            <p>FastAPI Wrapper with Integrated MCP Components</p>
+        </div>
+
+        <div class="architecture">
+            <!-- Streamlit Frontend -->
+            <div class="streamlit-component">
+                <div class="streamlit-icon">🌐</div>
+                <div class="streamlit-title">Streamlit</div>
+                <div class="streamlit-subtitle">Web Interface</div>
+                <div class="streamlit-port">Port 8501</div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="arrow">
+                <div class="arrow-line">→</div>
+                <div class="arrow-label">HTTP Requests</div>
+            </div>
+
+            <!-- FastAPI Wrapper containing MCP Client + Server -->
+            <div class="fastapi-wrapper">
+                <div class="wrapper-title">FastAPI Application</div>
+                <div class="wrapper-port">Port 9232</div>
+                
+                <div class="internal-components">
+                    <!-- MCP Client Internal -->
+                    <div class="internal-box mcp-client-internal">
+                        <div class="component-icon">⚡</div>
+                        <div class="component-title">MCP Client</div>
+                        <div class="component-subtitle">HTTP + Mistral AI</div>
+                        <div class="port-badge">Internal</div>
+                    </div>
+
+                    <!-- Internal Arrow -->
+                    <div class="internal-arrow">⟷</div>
+
+                    <!-- MCP Server Internal -->
+                    <div class="internal-box mcp-server-internal">
+                        <div class="component-icon">🧮</div>
+                        <div class="component-title">MCP Server</div>
+                        <div class="component-subtitle">Calculator Engine</div>
+                        <div class="port-badge">Internal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="separation-note">
+            <strong>Architecture:</strong> MCP Client + Server wrapped together in single FastAPI application (Port 9232) • Streamlit communicates only with FastAPI wrapper
+        </div>
+
+        <div class="info-flow">
+            <h3>📊 Information Exchange Flow</h3>
+            
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <h4>User Input</h4>
+                    <p><strong>Streamlit (8501)</strong><br>
+                    User: "What is 25 × 4?"<br>
+                    HTTP POST → FastAPI</p>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <h4>HTTP Handler</h4>
+                    <p><strong>FastAPI Wrapper</strong><br>
+                    Receives request<br>
+                    Routes to MCP Client</p>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <h4>AI + MCP Call</h4>
+                    <p><strong>MCP Client (Internal)</strong><br>
+                    Mistral interprets language<br>
+                    Calls internal MCP Server</p>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <h4>Calculation</h4>
+                    <p><strong>MCP Server (Internal)</strong><br>
+                    Executes multiply(25, 4)<br>
+                    Returns result: 100</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
