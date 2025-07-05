@@ -3,7 +3,7 @@
 Test script to verify agent chat functionality with tool calling.
 """
 
-from agent_chat_app_fixed import (
+from agent_chat_app import (
     new_agent_conversation, add_user_message_and_run_agent, 
     get_conversation_history, execute_tool_call
 )
@@ -102,6 +102,6 @@ def test_agent_chat():
 if __name__ == "__main__":
     success = test_agent_chat()
     if success:
-        print("\n✅ You can now run 'python agent_chat_app_fixed.py' to use the agent chat!")
+        print("\n✅ You can now run 'python agent_chat_app.py' to use the agent chat!")
     else:
         print("\n❌ Some tests failed. Please check the errors above.")

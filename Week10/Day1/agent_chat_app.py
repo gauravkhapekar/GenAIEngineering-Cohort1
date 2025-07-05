@@ -18,16 +18,20 @@ init_db()
 
 # Tool functions
 def list_files():
-    """List all files in the current directory"""
+    """List all files in the notes/ directory"""
     try:
+        # Ensure notes directory exists
+        os.makedirs('notes', exist_ok=True)
+        
         files = []
-        for item in os.listdir('.'):
-            if os.path.isfile(item):
+        for item in os.listdir('notes'):
+            file_path = os.path.join('notes', item)
+            if os.path.isfile(file_path):
                 files.append(item)
         return {
             "status": "success",
             "files": files,
-            "message": f"Found {len(files)} files"
+            "message": f"Found {len(files)} files in notes/ directory"
         }
     except Exception as e:
         return {
@@ -36,21 +40,27 @@ def list_files():
         }
 
 def read_file(filename: str):
-    """Read content from a file"""
+    """Read content from a file in the notes/ directory"""
     try:
-        if not os.path.exists(filename):
+        # Ensure notes directory exists
+        os.makedirs('notes', exist_ok=True)
+        
+        # Construct full path in notes directory
+        file_path = os.path.join('notes', filename)
+        
+        if not os.path.exists(file_path):
             return {
                 "status": "error",
-                "message": f"File '{filename}' not found"
+                "message": f"File '{filename}' not found in notes/ directory"
             }
         
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
         return {
             "status": "success",
             "content": content,
-            "message": f"Successfully read {filename}"
+            "message": f"Successfully read {filename} from notes/ directory"
         }
     except Exception as e:
         return {
@@ -59,20 +69,26 @@ def read_file(filename: str):
         }
 
 def create_file(name: str, content: str):
-    """Create a new file with given content"""
+    """Create a new file with given content in the notes/ directory"""
     try:
-        if os.path.exists(name):
+        # Ensure notes directory exists
+        os.makedirs('notes', exist_ok=True)
+        
+        # Construct full path in notes directory
+        file_path = os.path.join('notes', name)
+        
+        if os.path.exists(file_path):
             return {
                 "status": "error",
-                "message": f"File '{name}' already exists"
+                "message": f"File '{name}' already exists in notes/ directory"
             }
         
-        with open(name, 'w', encoding='utf-8') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(content)
         
         return {
             "status": "success",
-            "message": f"Created successfully {name}"
+            "message": f"Created successfully {name} in notes/ directory"
         }
     except Exception as e:
         return {
@@ -81,14 +97,20 @@ def create_file(name: str, content: str):
         }
 
 def update_file(name: str, content: str):
-    """Update an existing file with new content"""
+    """Update an existing file with new content in the notes/ directory"""
     try:
-        with open(name, 'w', encoding='utf-8') as f:
+        # Ensure notes directory exists
+        os.makedirs('notes', exist_ok=True)
+        
+        # Construct full path in notes directory
+        file_path = os.path.join('notes', name)
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(content)
         
         return {
             "status": "success",
-            "message": f"Updated successfully {name}"
+            "message": f"Updated successfully {name} in notes/ directory"
         }
     except Exception as e:
         return {
@@ -110,7 +132,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "list_files",
-            "description": "List all files in the current directory",
+            "description": "List all files in the notes/ directory",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -122,7 +144,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read content from a file",
+            "description": "Read content from a file in the notes/ directory",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -139,7 +161,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "create_file",
-            "description": "Create a new file with given content",
+            "description": "Create a new file with given content in the notes/ directory",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -160,7 +182,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "update_file",
-            "description": "Update an existing file with new content",
+            "description": "Update an existing file with new content in the notes/ directory",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -202,7 +224,6 @@ def execute_tool_call(tool_name: str, arguments: dict):
 
 def process_tool_calls(thread_id: int, message_id: int, tool_calls: List[dict]) -> bool:
     """Process tool calls from an assistant message and return True when all are complete"""
-    all_completed = True
     
     for tool_call in tool_calls:
         tool_call_id = tool_call.get("id")
@@ -214,12 +235,12 @@ def process_tool_calls(thread_id: int, message_id: int, tool_calls: List[dict]) 
         except json.JSONDecodeError:
             arguments = {}
         
-        # Check if this tool call already exists
+        # Check if this tool call already exists in database
         existing_calls = get_agent_tool_calls_for_message(thread_id, message_id)
         already_exists = any(call["tool_call_id"] == tool_call_id for call in existing_calls)
         
         if not already_exists:
-            # Store tool call in database
+            # Store tool call in database BEFORE execution
             insert_agent_tool_call(
                 thread_id=thread_id,
                 message_id=message_id,
@@ -228,32 +249,72 @@ def process_tool_calls(thread_id: int, message_id: int, tool_calls: List[dict]) 
                 arguments=arguments_str,
                 status="pending"
             )
+    
+    # Now execute all pending tool calls for this message
+    pending_calls = get_pending_agent_tool_calls(thread_id, message_id)
+    
+    for pending_call in pending_calls:
+        tool_call_id = pending_call["tool_call_id"]
+        tool_name = pending_call["tool_name"]
+        arguments_str = pending_call["arguments"]
+        
+        try:
+            arguments = json.loads(arguments_str)
+        except json.JSONDecodeError:
+            arguments = {}
+        
+        # Execute the tool call
+        result = execute_tool_call(tool_name, arguments)
+        
+        # Update tool call status
+        status = "completed" if result.get("status") == "success" else "failed"
+        update_agent_tool_call_status(
+            tool_call_id=tool_call_id,
+            status=status,
+            result=json.dumps(result)
+        )
+        
+        # Check if we already have a tool message for this tool_call_id
+        existing_messages = get_agent_messages(thread_id)
+        tool_message_exists = False
+        for msg_row in existing_messages:
+            msg = dict(msg_row)  # Convert sqlite3.Row to dict
+            if msg["role"] == "tool" and msg.get("extra"):
+                try:
+                    extra = json.loads(msg["extra"])
+                    if extra.get("tool_call_id") == tool_call_id:
+                        tool_message_exists = True
+                        break
+                except:
+                    pass
+        
+        # Only add tool message if one doesn't already exist for this tool_call_id
+        if not tool_message_exists:
+            # Format tool content according to OpenAI standards
+            if result.get("status") == "success":
+                if "content" in result:
+                    tool_content = result["content"]
+                elif "files" in result:
+                    tool_content = f"Found {len(result['files'])} files: {', '.join(result['files'])}"
+                else:
+                    tool_content = result.get("message", "Operation completed successfully")
+            else:
+                tool_content = result.get("message", "Operation failed")
             
-            # Execute the tool call
-            result = execute_tool_call(tool_name, arguments)
-            
-            # Update tool call status
-            update_agent_tool_call_status(
-                tool_call_id=tool_call_id,
-                status="completed" if result.get("status") == "success" else "failed",
-                result=json.dumps(result)
-            )
-            
-            # Add tool response message
-            tool_content = json.dumps(result, indent=2)
             insert_agent_message(
                 thread_id=thread_id,
                 role="tool",
                 content=tool_content,
                 extra=json.dumps({
                     "tool_call_id": tool_call_id,
-                    "tool_name": tool_name
+                    "tool_name": tool_name,
+                    "full_result": result
                 })
             )
     
     # Check if all tool calls for this message are completed
-    pending_calls = get_pending_agent_tool_calls(thread_id, message_id)
-    return len(pending_calls) == 0
+    remaining_pending = get_pending_agent_tool_calls(thread_id, message_id)
+    return len(remaining_pending) == 0
 
 def agent_conversation_loop(thread_id: int, model: str = "openai/gpt-4o", temperature: float = 1.0, max_iterations: int = 10):
     """Run the agent conversation loop until no more tool calls are needed"""
@@ -276,6 +337,19 @@ def agent_conversation_loop(thread_id: int, model: str = "openai/gpt-4o", temper
                     extra = json.loads(m["extra"])
                     if "tool_call_id" in extra:
                         msg["tool_call_id"] = extra["tool_call_id"]
+                except:
+                    pass
+            
+            # Add tool_calls for assistant messages
+            elif m["role"] == "assistant" and m.get("extra"):
+                try:
+                    extra = json.loads(m["extra"])
+                    # Check if this is the full API response data
+                    if "choices" in extra:
+                        assistant_message = extra.get("choices", [{}])[0].get("message", {})
+                        tool_calls = assistant_message.get("tool_calls", [])
+                        if tool_calls:
+                            msg["tool_calls"] = tool_calls
                 except:
                     pass
             
@@ -379,14 +453,27 @@ def get_conversation_history(thread_id: int) -> List[dict]:
 
 def build_agent_ui():
     """Build the Gradio UI for the agent chat"""
+    from chatbot_models import get_default_title
+    
+    def get_sidebar_conversations(offset=0, max_display=10):
+        threads = list_agent_threads()
+        threads = sorted(threads, key=lambda t: t["updated_at"], reverse=True)
+        total = len(threads)
+        threads = threads[offset:offset+max_display]
+        
+        options = []
+        thread_ids = []
+        for t in threads:
+            title = t["title"] or get_default_title(t["created_at"])
+            options.append([f"🤖 {title}"])
+            thread_ids.append(t["id"])
+        
+        more = (offset + max_display) < total
+        return options, thread_ids, more, total
     
     def refresh_conversations():
-        threads = list_agent_threads()
-        options = []
-        for t in threads:
-            title = t["title"] or f"Agent Conversation {t['id']}"
-            options.append((title, t["id"]))
-        return gr.Dropdown(choices=options, value=None)
+        options, thread_ids, more, total = get_sidebar_conversations()
+        return gr.update(value=options), thread_ids, gr.update(visible=more)
     
     def on_new_conversation(model, temperature):
         thread_id = new_agent_conversation(model, temperature)
@@ -409,59 +496,49 @@ def build_agent_ui():
         
         return history, f"Agent completed in {iterations} iterations"
     
-    def on_load_conversation(thread_id):
-        if not thread_id:
-            return [], "No conversation selected"
+    def on_select_conversation(evt: gr.SelectData, thread_ids):
+        if not thread_ids or evt is None or evt.index is None or evt.index[0] >= len(thread_ids):
+            return [], None, "No conversation selected"
+        
+        idx = evt.index[0]
+        thread_id = thread_ids[idx]
         
         history = get_conversation_history(int(thread_id))
-        return history, f"Loaded agent conversation {thread_id}"
+        return history, thread_id, f"Loaded agent conversation {thread_id}"
+    
+    def on_load_more(current_offset, current_thread_ids):
+        new_offset = current_offset + 10
+        options, thread_ids, more, total = get_sidebar_conversations(new_offset)
+        return gr.update(value=options), thread_ids, gr.update(visible=more), new_offset
     
     with gr.Blocks(title="Agent Chat with Tools") as demo:
         gr.Markdown("# 🤖 Agent Chat with Tool Calling")
-        gr.Markdown("This agent can use tools to list files, read files, create files, and update files. Tool calls are tracked and displayed even when message content is empty.")
+        gr.Markdown("This agent can use tools to list files, read files, create files, and update files in the notes/ folder. Tool calls are tracked and displayed even when message content is empty.")
         
         with gr.Row():
             with gr.Column(scale=1):
-                gr.Markdown("### Controls")
+                gr.Markdown("### Agent Conversations")
                 
-                with gr.Accordion("Settings", open=True):
-                    model_dropdown = gr.Dropdown(
-                        label="Model",
-                        choices=[
-                            "openrouter/cypher-alpha:free",
-                            "openai/gpt-4o",
-                            "openai/gpt-4.1",
-                            "openai/gpt-4.1-mini",
-                            "openai/gpt-4.1-nano",
-                            "anthropic/claude-sonnet-4",
-                            "anthropic/claude-3.5-sonnet"
-                        ],
-                        value="openrouter/cypher-alpha:free"
-                    )
-                    temperature_slider = gr.Slider(
-                        label="Temperature",
-                        minimum=0.0,
-                        maximum=2.0,
-                        value=1.0,
-                        step=0.1
-                    )
+                new_conv_btn = gr.Button("🆕 New Agent Conversation", variant="primary")
                 
-                new_conv_btn = gr.Button("New Agent Conversation", variant="primary")
-                
-                conversation_dropdown = gr.Dropdown(
-                    label="Load Agent Conversation",
-                    choices=[],
-                    value=None
+                conversation_list = gr.Dataframe(
+                    headers=["Conversations"],
+                    datatype=["str"],
+                    interactive=True,
+                    row_count=10,
+                    col_count=1,
+                    label="Load Agent Conversation"
                 )
-                refresh_btn = gr.Button("Refresh Conversations")
-                load_conv_btn = gr.Button("Load Selected")
+                
+                load_more_btn = gr.Button("Load More", visible=False)
+                refresh_btn = gr.Button("🔄 Refresh")
                 
             with gr.Column(scale=3):
                 gr.Markdown("### Agent Chat")
                 
                 chatbot = gr.Chatbot(
                     type="messages",
-                    height=500,
+                    height=400,
                     show_label=False
                 )
                 
@@ -473,6 +550,32 @@ def build_agent_ui():
                     )
                     send_btn = gr.Button("Send", variant="primary", scale=1)
                 
+                # Settings moved below message input
+                with gr.Accordion("⚙️ Settings", open=False):
+                    with gr.Row():
+                        model_dropdown = gr.Dropdown(
+                            label="Model",
+                            choices=[
+                                "openrouter/cypher-alpha:free",
+                                "openai/gpt-4o",
+                                "openai/gpt-4.1",
+                                "openai/gpt-4.1-mini",
+                                "openai/gpt-4.1-nano",
+                                "anthropic/claude-sonnet-4",
+                                "anthropic/claude-3.5-sonnet"
+                            ],
+                            value="openrouter/cypher-alpha:free",
+                            scale=2
+                        )
+                        temperature_slider = gr.Slider(
+                            label="Temperature",
+                            minimum=0.0,
+                            maximum=2.0,
+                            value=1.0,
+                            step=0.1,
+                            scale=1
+                        )
+                
                 status_text = gr.Textbox(
                     label="Status",
                     interactive=False,
@@ -481,6 +584,8 @@ def build_agent_ui():
         
         # State
         current_thread_id = gr.State(value=None)
+        sidebar_thread_ids = gr.State(value=[])
+        sidebar_offset = gr.State(value=0)
         
         # Event handlers
         new_conv_btn.click(
@@ -509,17 +614,25 @@ def build_agent_ui():
         
         refresh_btn.click(
             fn=refresh_conversations,
-            outputs=[conversation_dropdown]
+            outputs=[conversation_list, sidebar_thread_ids, load_more_btn]
         )
         
-        load_conv_btn.click(
-            fn=on_load_conversation,
-            inputs=[conversation_dropdown],
-            outputs=[chatbot, status_text]
-        ).then(
-            fn=lambda x: x,
-            inputs=[conversation_dropdown],
-            outputs=[current_thread_id]
+        conversation_list.select(
+            fn=on_select_conversation,
+            inputs=[sidebar_thread_ids],
+            outputs=[chatbot, current_thread_id, status_text]
+        )
+        
+        load_more_btn.click(
+            fn=on_load_more,
+            inputs=[sidebar_offset, sidebar_thread_ids],
+            outputs=[conversation_list, sidebar_thread_ids, load_more_btn, sidebar_offset]
+        )
+        
+        # Initialize sidebar on load
+        demo.load(
+            fn=refresh_conversations,
+            outputs=[conversation_list, sidebar_thread_ids, load_more_btn]
         )
     
     return demo
