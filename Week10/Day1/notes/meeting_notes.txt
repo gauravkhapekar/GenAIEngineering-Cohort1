@@ -1,0 +1,9 @@
+### Recent Feature Releases
+
+- Design updates:
+  - Switched from NeoPop to Dark theme
+  - Revamped website widgets
+- Technical improvements:
+  - Added model selection + OpenRouter integration
+  - Enhanced onboarding flow
+  - Implemented website filling and first brain AI field
