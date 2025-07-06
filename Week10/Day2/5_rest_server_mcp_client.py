@@ -48,11 +48,16 @@ async def initialize_tools():
 def initialize_mistral():
     """Initialize Mistral AI client"""
     global mistral_client
-    if MISTRAL_API_KEY and MISTRAL_API_KEY != "your-mistral-api-key-here":
-        mistral_client = Mistral(api_key=MISTRAL_API_KEY)
-        print("🤖 Mistral AI client initialized")
-    else:
-        print("⚠️  Mistral AI not configured")
+    if 'MISTRAL_KEY' not in os.environ:
+        print("MISTRAL_KEY environment variable is not set.")
+
+    mistral_client = Mistral(api_key=os.getenv('MISTRAL_KEY'))
+
+    # if MISTRAL_KEY and MISTRAL_API_KEY != "your-mistral-api-key-here":
+    #     mistral_client = Mistral(api_key=MISTRAL_API_KEY)
+    #     print("🤖 Mistral AI client initialized")
+    # else:
+    #     print("⚠️  Mistral AI not configured")
 
 def create_mistral_tools():
     """Convert MCP tools to Mistral tool format"""
