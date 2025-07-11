@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrewAI Tutorial - Interactive Slides</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease-in-out;
+            transform: translateX(50px);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-align: center;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        p,
+        li {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            border-left: 5px solid #667eea;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        .code-block .keyword {
+            color: #569cd6;
+            font-weight: bold;
+        }
+
+        .code-block .string {
+            color: #ce9178;
+        }
+
+        .code-block .comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .code-block .function {
+            color: #dcdcaa;
+        }
+
+        .code-block .class {
+            color: #4ec9b0;
+        }
+
+        .code-block .variable {
+            color: #9cdcfe;
+        }
+
+        .code-block .number {
+            color: #b5cea8;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-counter {
+            background: #34495e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: #667eea;
+            transition: width 0.3s ease;
+            z-index: 999;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        .intro-slide {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-container">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <!-- Slide 1: Introduction -->
+        <div class="slide active" data-slide="0">
+            <div class="intro-slide">
+                <div class="logo">🤖</div>
+                <h1>CrewAI Tutorial</h1>
+                <p style="font-size: 1.3em; color: #7f8c8d;">Master AI Agent Collaboration with CrewAI</p>
+                <div class="highlight">
+                    <p><strong>What you'll learn:</strong></p>
+                    <p>• Core concepts and architecture</p>
+                    <p>• Hands-on implementation</p>
+                    <p>• Best practices and advanced features</p>
+                    <p>• Real-world examples and use cases</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is CrewAI? -->
+        <div class="slide" data-slide="1">
+            <h2>What is CrewAI?</h2>
+            <p>CrewAI is a cutting-edge framework for orchestrating role-playing, autonomous AI agents. It enables you
+                to create sophisticated multi-agent systems where different AI agents collaborate to solve complex
+                problems.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🎭 Role-Playing Agents</h3>
+                    <p>Each agent has specific roles, goals, and backstories, making them specialized for particular
+                        tasks.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🤝 Collaborative Workflow</h3>
+                    <p>Agents work together in structured crews to accomplish complex multi-step objectives.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🧠 Autonomous Decision Making</h3>
+                    <p>Agents can make decisions, use tools, and adapt their approach based on context.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔧 Extensible Architecture</h3>
+                    <p>Easy integration with various LLMs, tools, and external services.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Installation & Setup -->
+        <div class="slide" data-slide="2">
+            <h2>Installation & Setup</h2>
+
+            <h3>1. Install CrewAI</h3>
+            <div class="code-block"><span class="comment"># Install CrewAI</span>
+                pip install crewai
+
+                <span class="comment"># For additional tools and integrations</span>
+                pip install <span class="string">'crewai[tools]'</span>
+            </div>
+
+            <h3>2. Install Required Dependencies</h3>
+            <div class="code-block"><span class="comment"># For OpenAI models</span>
+                pip install openai
+
+                <span class="comment"># For environment variables</span>
+                pip install python-dotenv
+
+                <span class="comment"># Core dependency</span>
+                pip install langchain
+            </div>
+
+            <h3>3. Environment Setup</h3>
+            <div class="code-block"><span class="comment"># Create .env file</span>
+                <span class="variable">OPENAI_API_KEY</span>=<span class="string">your_openai_api_key_here</span>
+                <span class="variable">OPENAI_MODEL_NAME</span>=<span class="string">gpt-4</span> <span
+                    class="comment"># or gpt-3.5-turbo</span>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Pro Tip:</strong> CrewAI supports multiple LLM providers including OpenAI, Anthropic, Google,
+                    and open-source models through Ollama.</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: Core Concepts -->
+        <div class="slide" data-slide="3">
+            <h2>Core Concepts</h2>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Description</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Agent</strong></td>
+                        <td>Individual AI entity with specific role and capabilities</td>
+                        <td>Execute tasks, make decisions, use tools</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Task</strong></td>
+                        <td>Specific job or objective to be completed</td>
+                        <td>Define what needs to be accomplished</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Crew</strong></td>
+                        <td>Collection of agents working together</td>
+                        <td>Orchestrate collaboration and workflow</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tool</strong></td>
+                        <td>External capability agents can use</td>
+                        <td>Extend agent capabilities (web search, file operations, etc.)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Key Principle:</strong> Each agent is like a specialized team member with unique skills,
+                    working together toward common goals.</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Creating Your First Agent -->
+        <div class="slide" data-slide="4">
+            <h2>Creating Your First Agent</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Agent</span>
+                <span class="keyword">from</span> <span class="variable">langchain.llms</span> <span
+                    class="keyword">import</span> <span class="class">OpenAI</span>
+
+                <span class="comment"># Create an agent</span>
+                <span class="variable">researcher</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Research Analyst'</span>,
+                <span class="variable">goal</span>=<span class="string">'Gather comprehensive information on specified
+                    topics'</span>,
+                <span class="variable">backstory</span>=<span class="string">"""You are an experienced research analyst
+                    with a keen
+                    eye for detail and accuracy. You excel at finding relevant
+                    information from multiple sources and synthesizing insights."""</span>,
+                <span class="variable">verbose</span>=<span class="keyword">True</span>,
+                <span class="variable">allow_delegation</span>=<span class="keyword">False</span>,
+                <span class="variable">llm</span>=<span class="class">OpenAI</span>(<span
+                    class="variable">temperature</span>=<span class="number">0.7</span>)
+                )
+            </div>
+
+            <h3>Agent Properties Explained:</h3>
+            <ul>
+                <li><strong>role:</strong> The agent's job title/function</li>
+                <li><strong>goal:</strong> What the agent aims to achieve</li>
+                <li><strong>backstory:</strong> Agent's background and personality</li>
+                <li><strong>verbose:</strong> Enable detailed logging</li>
+                <li><strong>allow_delegation:</strong> Can agent delegate tasks to others</li>
+                <li><strong>llm:</strong> Language model to use</li>
+            </ul>
+        </div>
+
+        <!-- Slide 6: Creating Tasks -->
+        <div class="slide" data-slide="5">
+            <h2>Creating Tasks</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Task</span>
+
+                <span class="comment"># Create a task</span>
+                <span class="variable">research_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">"""Research the latest trends in
+                    artificial intelligence
+                    for 2024. Focus on:
+                    1. Emerging technologies
+                    2. Market applications
+                    3. Key players and investments
+                    4. Future predictions
+
+                    Provide a comprehensive report with sources."""</span>,
+                <span class="variable">agent</span>=<span class="variable">researcher</span>,
+                <span class="variable">expected_output</span>=<span class="string">"A detailed report of 500+ words with
+                    citations"</span>
+                )
+            </div>
+
+            <h3>Task Properties:</h3>
+            <ul>
+                <li><strong>description:</strong> Detailed task instructions</li>
+                <li><strong>agent:</strong> Which agent will execute this task</li>
+                <li><strong>expected_output:</strong> Format and requirements for the result</li>
+                <li><strong>tools:</strong> (Optional) Specific tools for this task</li>
+                <li><strong>context:</strong> (Optional) Dependencies on other tasks</li>
+            </ul>
+
+            <div class="highlight">
+                <p><strong>Best Practice:</strong> Be specific in task descriptions. The more detailed your
+                    instructions, the better the agent's output.</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Building a Crew -->
+        <div class="slide" data-slide="6">
+            <h2>Building a Crew</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Crew</span>, <span class="class">Process</span>
+
+                <span class="comment"># Create multiple agents</span>
+                <span class="variable">writer</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Content Writer'</span>,
+                <span class="variable">goal</span>=<span class="string">'Create engaging and informative
+                    content'</span>,
+                <span class="variable">backstory</span>=<span class="string">"""You are a skilled content writer with
+                    expertise
+                    in technical topics. You excel at making complex information
+                    accessible and engaging."""</span>,
+                <span class="variable">verbose</span>=<span class="keyword">True</span>,
+                <span class="variable">llm</span>=<span class="class">OpenAI</span>(<span
+                    class="variable">temperature</span>=<span class="number">0.8</span>)
+                )
+
+                <span class="comment"># Create tasks for each agent</span>
+                <span class="variable">writing_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">"""Using the research provided, write an
+                    engaging
+                    blog post about AI trends. Make it accessible to a general
+                    audience while maintaining technical accuracy."""</span>,
+                <span class="variable">agent</span>=<span class="variable">writer</span>,
+                <span class="variable">expected_output</span>=<span class="string">"A 800-word blog post in markdown
+                    format"</span>
+                )
+
+                <span class="comment"># Create the crew</span>
+                <span class="variable">ai_research_crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">researcher</span>, <span
+                    class="variable">writer</span>],
+                <span class="variable">tasks</span>=[<span class="variable">research_task</span>, <span
+                    class="variable">writing_task</span>],
+                <span class="variable">verbose</span>=<span class="number">2</span>,
+                <span class="variable">process</span>=<span class="class">Process</span>.<span
+                    class="variable">sequential</span>
+                )
+            </div>
+        </div>
+
+        <!-- Slide 8: Running Your Crew -->
+        <div class="slide" data-slide="7">
+            <h2>Running Your Crew</h2>
+
+            <div class="code-block"><span class="comment"># Execute the crew</span>
+                <span class="variable">result</span> = <span class="variable">ai_research_crew</span>.<span
+                    class="function">kickoff</span>()
+
+                <span class="function">print</span>(<span class="string">"Final Result:"</span>)
+                <span class="function">print</span>(<span class="variable">result</span>)
+            </div>
+
+            <h3>Process Types:</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Sequential</h3>
+                    <p>Tasks execute one after another. Each task can use outputs from previous tasks.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Hierarchical</h3>
+                    <p>Manager agent delegates and coordinates tasks among other agents.</p>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Output:</strong> The crew will return the final result from the last task in the sequence.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Adding Tools -->
+        <div class="slide" data-slide="8">
+            <h2>Adding Tools to Agents</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai_tools</span> <span
+                    class="keyword">import</span> <span class="class">SerperDevTool</span>, <span
+                    class="class">FileReadTool</span>, <span class="class">WebsiteSearchTool</span>
+
+                <span class="comment"># Initialize tools</span>
+                <span class="variable">search_tool</span> = <span class="class">SerperDevTool</span>()
+                <span class="variable">file_tool</span> = <span class="class">FileReadTool</span>()
+                <span class="variable">web_tool</span> = <span class="class">WebsiteSearchTool</span>()
+
+                <span class="comment"># Create agent with tools</span>
+                <span class="variable">enhanced_researcher</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Senior Research Analyst'</span>,
+                <span class="variable">goal</span>=<span class="string">'Conduct thorough research using multiple
+                    sources'</span>,
+                <span class="variable">backstory</span>=<span class="string">"""Expert researcher with access to web
+                    search,
+                    file analysis, and website exploration capabilities."""</span>,
+                <span class="variable">tools</span>=[<span class="variable">search_tool</span>, <span
+                    class="variable">file_tool</span>, <span class="variable">web_tool</span>],
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+            </div>
+
+            <h3>Popular CrewAI Tools:</h3>
+            <ul>
+                <li><strong>SerperDevTool:</strong> Web search capabilities</li>
+                <li><strong>FileReadTool:</strong> Read and analyze files</li>
+                <li><strong>WebsiteSearchTool:</strong> Search specific websites</li>
+                <li><strong>CodeDocsSearchTool:</strong> Search code documentation</li>
+                <li><strong>YoutubeVideoSearchTool:</strong> Search YouTube content</li>
+            </ul>
+        </div>
+
+        <!-- Slide 10: Custom Tools -->
+        <div class="slide" data-slide="9">
+            <h2>Creating Custom Tools</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai_tools</span> <span
+                    class="keyword">import</span> <span class="class">BaseTool</span>
+                <span class="keyword">from</span> <span class="variable">typing</span> <span
+                    class="keyword">import</span> <span class="class">Type</span>
+                <span class="keyword">from</span> <span class="variable">pydantic</span> <span
+                    class="keyword">import</span> <span class="class">BaseModel</span>, <span class="class">Field</span>
+
+                <span class="keyword">class</span> <span class="class">EmailInput</span>(<span
+                    class="class">BaseModel</span>):
+                <span class="variable">to</span>: <span class="keyword">str</span> = <span
+                    class="class">Field</span>(<span class="variable">description</span>=<span class="string">"Email
+                    recipient"</span>)
+                <span class="variable">subject</span>: <span class="keyword">str</span> = <span
+                    class="class">Field</span>(<span class="variable">description</span>=<span class="string">"Email
+                    subject"</span>)
+                <span class="variable">body</span>: <span class="keyword">str</span> = <span
+                    class="class">Field</span>(<span class="variable">description</span>=<span class="string">"Email
+                    body"</span>)
+
+                <span class="keyword">class</span> <span class="class">EmailTool</span>(<span
+                    class="class">BaseTool</span>):
+                <span class="variable">name</span>: <span class="keyword">str</span> = <span class="string">"Email
+                    Sender"</span>
+                <span class="variable">description</span>: <span class="keyword">str</span> = <span class="string">"Send
+                    emails to specified recipients"</span>
+                <span class="variable">args_schema</span>: <span class="class">Type</span>[<span
+                    class="class">BaseModel</span>] = <span class="class">EmailInput</span>
+
+                <span class="keyword">def</span> <span class="function">_run</span>(<span class="variable">self</span>,
+                <span class="variable">to</span>: <span class="keyword">str</span>, <span
+                    class="variable">subject</span>: <span class="keyword">str</span>, <span
+                    class="variable">body</span>: <span class="keyword">str</span>) -> <span class="keyword">str</span>:
+                <span class="comment"># Implement your email sending logic here</span>
+                <span class="keyword">return</span> <span class="string">f"Email sent to {to} with subject:
+                    {subject}"</span>
+
+                <span class="comment"># Use the custom tool</span>
+                <span class="variable">email_tool</span> = <span class="class">EmailTool</span>()
+                <span class="variable">agent_with_email</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Communication Manager'</span>,
+                <span class="variable">tools</span>=[<span class="variable">email_tool</span>],
+                <span class="comment"># ... other properties</span>
+                )
+            </div>
+        </div>
+
+        <!-- Slide 11: Memory and Context -->
+        <div class="slide" data-slide="10">
+            <h2>Memory and Context Management</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Crew</span>
+                <span class="keyword">from</span> <span class="variable">crewai.memory</span> <span
+                    class="keyword">import</span> <span class="class">LongTermMemory</span>, <span
+                    class="class">ShortTermMemory</span>
+
+                <span class="comment"># Enable memory for the crew</span>
+                <span class="variable">crew_with_memory</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">researcher</span>, <span
+                    class="variable">writer</span>],
+                <span class="variable">tasks</span>=[<span class="variable">research_task</span>, <span
+                    class="variable">writing_task</span>],
+                <span class="variable">memory</span>=<span class="keyword">True</span>, <span class="comment"># Enable
+                    short-term memory</span>
+                <span class="comment"># long_term_memory=LongTermMemory(), # Optional long-term memory</span>
+                <span class="variable">verbose</span>=<span class="number">2</span>
+                )
+
+                <span class="comment"># Task context - using outputs from previous tasks</span>
+                <span class="variable">dependent_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">"Summarize the key findings from the
+                    research"</span>,
+                <span class="variable">agent</span>=<span class="variable">writer</span>,
+                <span class="variable">context</span>=[<span class="variable">research_task</span>], <span
+                    class="comment"># This task depends on research_task output</span>
+                <span class="variable">expected_output</span>=<span class="string">"A 200-word summary"</span>
+                )
+            </div>
+
+            <div class="highlight">
+                <p><strong>Memory Benefits:</strong> Agents can remember past interactions, learn from previous tasks,
+                    and maintain context across multiple crew executions.</p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Error Handling & Validation -->
+        <div class="slide" data-slide="11">
+            <h2>Error Handling & Validation</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Task</span>
+                <span class="keyword">import</span> <span class="variable">json</span>
+
+                <span class="keyword">def</span> <span class="function">validate_json_output</span>(<span
+                    class="variable">output</span>):
+                <span class="keyword">try</span>:
+                <span class="variable">json</span>.<span class="function">loads</span>(<span
+                    class="variable">output</span>)
+                <span class="keyword">return</span> <span class="keyword">True</span>
+                <span class="keyword">except</span>:
+                <span class="keyword">return</span> <span class="keyword">False</span>
+
+                <span class="variable">structured_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">"""Create a JSON report with the
+                    following structure:
+                    {
+                    "title": "Report title",
+                    "findings": ["finding1", "finding2"],
+                    "conclusions": "Main conclusion"
+                    }"""</span>,
+                <span class="variable">agent</span>=<span class="variable">researcher</span>,
+                <span class="variable">expected_output</span>=<span class="string">"Valid JSON format"</span>,
+                <span class="variable">output_json</span>=<span class="keyword">True</span>, <span class="comment">#
+                    Automatically parse as JSON</span>
+                <span class="comment"># output_pydantic=MyModel, # Or use Pydantic model</span>
+                <span class="comment"># output_file='report.json' # Save to file</span>
+                )
+
+                <span class="comment"># Error handling in crew execution</span>
+                <span class="keyword">try</span>:
+                <span class="variable">result</span> = <span class="variable">crew</span>.<span
+                    class="function">kickoff</span>()
+                <span class="keyword">except</span> <span class="class">Exception</span> <span class="keyword">as</span>
+                <span class="variable">e</span>:
+                <span class="function">print</span>(<span class="string">f"Crew execution failed: {e}"</span>)
+                <span class="comment"># Implement fallback logic</span>
+            </div>
+        </div>
+
+        <!-- Slide 13: Hierarchical Process Introduction -->
+        <div class="slide" data-slide="12">
+            <h2>Advanced Feature 1: Hierarchical Process</h2>
+
+            <h3>🤔 What is Hierarchical Process?</h3>
+            <p>Instead of agents working one after another (sequential), a <strong>manager agent</strong> coordinates
+                and delegates tasks to other agents - just like a real workplace!</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📋 Sequential (What we've seen)</h3>
+                    <p>Agent 1 → Agent 2 → Agent 3<br>Each agent works after the previous one finishes</p>
+                </div>
+                <div class="feature-card">
+                    <h3>👔 Hierarchical (New!)</h3>
+                    <p>Manager assigns tasks to agents based on their expertise and availability</p>
+                </div>
+            </div>
+
+            <h3>🎯 When to Use Hierarchical Process:</h3>
+            <ul>
+                <li><strong>Complex projects:</strong> When tasks need coordination and planning</li>
+                <li><strong>Dynamic workflows:</strong> When task order might change based on results</li>
+                <li><strong>Quality control:</strong> Manager can review and redirect work</li>
+                <li><strong>Resource management:</strong> Manager decides who does what based on skills</li>
+            </ul>
+
+            <div class="highlight">
+                <p><strong>Think of it like:</strong> A project manager assigning tasks to different team members based
+                    on their expertise, rather than everyone working in a fixed order.</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: Hierarchical Process Implementation -->
+        <div class="slide" data-slide="13">
+            <h2>Implementing Hierarchical Process</h2>
+
+            <h3>👔 Step 1: Create Your Team (Same as Before)</h3>
+            <div class="code-block"><span class="comment"># Create your regular agents - no changes needed!</span>
+                <span class="variable">researcher</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Research Specialist'</span>,
+                <span class="variable">goal</span>=<span class="string">'Find accurate information'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Expert at finding reliable sources'</span>
+                )
+
+                <span class="variable">writer</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Content Creator'</span>,
+                <span class="variable">goal</span>=<span class="string">'Write engaging content'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Skilled at making complex topics
+                    simple'</span>
+                )
+
+                <span class="variable">reviewer</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Quality Checker'</span>,
+                <span class="variable">goal</span>=<span class="string">'Ensure high quality output'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Detail-oriented quality assurance
+                    expert'</span>
+                )
+            </div>
+
+            <h3>🎯 Step 2: Define Your Tasks (Same as Before)</h3>
+            <div class="code-block"><span class="variable">research_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Research AI trends for 2024'</span>,
+                <span class="variable">expected_output</span>=<span class="string">'Research report with sources'</span>
+                )
+
+                <span class="variable">writing_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Write blog post about AI trends'</span>,
+                <span class="variable">expected_output</span>=<span class="string">'Complete blog post'</span>
+                )
+
+                <span class="variable">review_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Review and improve the blog
+                    post'</span>,
+                <span class="variable">expected_output</span>=<span class="string">'Polished final article'</span>
+                )
+            </div>
+        </div>
+
+        <!-- Slide 15: Hierarchical Process Setup -->
+        <div class="slide" data-slide="14">
+            <h2>Setting Up the Manager</h2>
+
+            <h3>🎯 Step 3: Create Hierarchical Crew</h3>
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Crew</span>, <span class="class">Process</span>
+                <span class="keyword">from</span> <span class="variable">langchain_openai</span> <span
+                    class="keyword">import</span> <span class="class">ChatOpenAI</span>
+
+                <span class="comment"># The magic happens here! ✨</span>
+                <span class="variable">manager_crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">researcher</span>, <span
+                    class="variable">writer</span>, <span class="variable">reviewer</span>],
+                <span class="variable">tasks</span>=[<span class="variable">research_task</span>, <span
+                    class="variable">writing_task</span>, <span class="variable">review_task</span>],
+
+                <span class="comment"># 🔑 KEY CHANGES:</span>
+                <span class="variable">process</span>=<span class="class">Process</span>.<span
+                    class="variable">hierarchical</span>, <span class="comment"># Instead of sequential</span>
+                <span class="variable">manager_llm</span>=<span class="class">ChatOpenAI</span>(<span
+                    class="variable">model</span>=<span class="string">"gpt-4"</span>), <span class="comment">#
+                    Manager's "brain"</span>
+
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+            </div>
+
+            <h3>🧠 What's Different?</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Process Type</h3>
+                    <p><code>Process.hierarchical</code> instead of <code>Process.sequential</code></p>
+                </div>
+                <div class="feature-card">
+                    <h3>Manager LLM</h3>
+                    <p>The "brain" that makes decisions about task assignment</p>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Behind the Scenes:</strong> CrewAI automatically creates an invisible "Manager Agent" that
+                    coordinates everything. You don't see it, but it's making smart decisions about who should do what!
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 16: Async Execution Introduction -->
+        <div class="slide" data-slide="15">
+            <h2>Advanced Feature 2: Async Execution</h2>
+
+            <h3>🤔 What is Async (Asynchronous) Programming?</h3>
+            <p>Imagine you're cooking dinner. Instead of waiting for water to boil before chopping vegetables, you start
+                both at the same time. That's async programming!</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🐢 Regular (Synchronous)</h3>
+                    <p>Do one thing → Wait → Do next thing → Wait → Continue...</p>
+                    <p>Total time: Sum of all individual times</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🚀 Async (Asynchronous)</h3>
+                    <p>Start multiple things → Work on them simultaneously → Finish faster</p>
+                    <p>Total time: Time of the longest task</p>
+                </div>
+            </div>
+
+            <h3>🎯 When is Async Useful for CrewAI?</h3>
+            <ul>
+                <li><strong>Web research:</strong> Multiple agents searching different topics simultaneously</li>
+                <li><strong>File processing:</strong> Processing multiple documents at once</li>
+                <li><strong>API calls:</strong> Making multiple external service calls</li>
+                <li><strong>Large crews:</strong> When you have many independent tasks</li>
+            </ul>
+
+            <div class="highlight">
+                <p><strong>Real Example:</strong> Instead of waiting 5 minutes for research, then 3 minutes for writing,
+                    you could potentially finish both in 5 minutes total!</p>
+            </div>
+        </div>
+
+        <!-- Slide 17: Async Implementation -->
+        <div class="slide" data-slide="16">
+            <h2>Implementing Async Execution</h2>
+
+            <h3>📝 Regular Crew Execution (What we know)</h3>
+            <div class="code-block"><span class="comment"># This runs synchronously - one task after another</span>
+                <span class="variable">result</span> = <span class="variable">crew</span>.<span
+                    class="function">kickoff</span>()
+                <span class="function">print</span>(<span class="variable">result</span>)
+            </div>
+
+            <h3>🚀 Async Crew Execution (New!)</h3>
+            <div class="code-block"><span class="comment"># Step 1: Import asyncio (comes with Python!)</span>
+                <span class="keyword">import</span> <span class="variable">asyncio</span>
+
+                <span class="comment"># Step 2: Create an async function</span>
+                <span class="keyword">async def</span> <span class="function">run_crew_async</span>():
+                <span class="comment"># Notice the 'await' keyword - this is the magic!</span>
+                <span class="variable">result</span> = <span class="keyword">await</span> <span
+                    class="variable">crew</span>.<span class="function">kickoff_async</span>()
+                <span class="keyword">return</span> <span class="variable">result</span>
+
+                <span class="comment"># Step 3: Run the async function</span>
+                <span class="variable">result</span> = <span class="variable">asyncio</span>.<span
+                    class="function">run</span>(<span class="function">run_crew_async</span>())
+            </div>
+
+            <h3>🔑 Key Async Keywords Explained:</h3>
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Keyword</th>
+                        <th>What it does</th>
+                        <th>Think of it as</th>
+                    </tr>
+                    <tr>
+                        <td><strong>async def</strong></td>
+                        <td>Creates a function that can run asynchronously</td>
+                        <td>"This function can multitask"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>await</strong></td>
+                        <td>Waits for something to finish, but allows other things to run</td>
+                        <td>"Wait for this, but stay busy with other tasks"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>asyncio.run()</strong></td>
+                        <td>Starts the async function</td>
+                        <td>"Begin the multitasking magic"</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 18: Crew Callbacks Introduction -->
+        <div class="slide" data-slide="17">
+            <h2>Advanced Feature 3: Crew Callbacks</h2>
+
+            <h3>🤔 What are Callbacks?</h3>
+            <p>A callback is like asking someone to "call you back" when something happens. In programming, it's a
+                function that runs automatically when certain events occur.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🔔 Real Life Example</h3>
+                    <p>"Text me when the pizza is ready" - the delivery person "calls back" when the event (pizza ready)
+                        happens</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💻 In CrewAI</h3>
+                    <p>"Run this function when a task is completed" - your function runs automatically when tasks finish
+                    </p>
+                </div>
+            </div>
+
+            <h3>🎯 Why Use Callbacks in CrewAI?</h3>
+            <ul>
+                <li><strong>Progress tracking:</strong> Know exactly when each task completes</li>
+                <li><strong>Logging:</strong> Save important information as work progresses</li>
+                <li><strong>Notifications:</strong> Alert users when major milestones are reached</li>
+                <li><strong>Error handling:</strong> React immediately when something goes wrong</li>
+                <li><strong>Performance monitoring:</strong> Track how long tasks take</li>
+            </ul>
+
+            <div class="highlight">
+                <p><strong>Think of it as:</strong> Setting up automatic notifications for your crew's progress, like
+                    getting a ping every time a team member finishes their part of a project.</p>
+            </div>
+        </div>
+
+        <!-- Slide 19: Implementing Callbacks -->
+        <div class="slide" data-slide="18">
+            <h2>Implementing Crew Callbacks</h2>
+
+            <h3>📝 Step 1: Create Your Callback Function</h3>
+            <div class="code-block"><span class="comment"># This function runs every time a task completes</span>
+                <span class="keyword">def</span> <span class="function">step_callback</span>(<span
+                    class="variable">step</span>):
+                <span class="comment"># 'step' contains information about what just finished</span>
+                <span class="function">print</span>(<span class="string">f"✅ Task completed: {step.description}"</span>)
+                <span class="function">print</span>(<span class="string">f"⏰ Time taken: {step.duration}
+                    seconds"</span>)
+                <span class="function">print</span>(<span class="string">f"👤 Agent: {step.agent.role}"</span>)
+                <span class="function">print</span>(<span class="string">"="</span> * <span class="number">50</span>)
+                <span class="comment"># Just a separator line</span>
+            </div>
+
+            <h3>🎯 Step 2: Advanced Callback with Logging</h3>
+            <div class="code-block"><span class="keyword">import</span> <span class="variable">datetime</span>
+
+                <span class="keyword">def</span> <span class="function">advanced_callback</span>(<span
+                    class="variable">step</span>):
+                <span class="comment"># Get current time</span>
+                <span class="variable">timestamp</span> = <span class="variable">datetime</span>.<span
+                    class="function">datetime</span>.<span class="function">now</span>().<span
+                    class="function">strftime</span>(<span class="string">"%Y-%m-%d %H:%M:%S"</span>)
+
+                <span class="comment"># Create a detailed log message</span>
+                <span class="variable">log_message</span> = <span class="string">f"""
+                    📊 TASK COMPLETED REPORT
+                    ⏰ Time: {timestamp}
+                    🎯 Task: {step.description}
+                    👤 Agent: {step.agent.role}
+                    ✨ Status: Success
+                    """</span>
+
+                <span class="function">print</span>(<span class="variable">log_message</span>)
+
+                <span class="comment"># You could also save this to a file!</span>
+                <span class="keyword">with</span> <span class="function">open</span>(<span
+                    class="string">"crew_progress.txt"</span>, <span class="string">"a"</span>) <span
+                    class="keyword">as</span> <span class="variable">file</span>:
+                <span class="variable">file</span>.<span class="function">write</span>(<span
+                    class="variable">log_message</span> + <span class="string">"\n"</span>)
+            </div>
+
+            <h3>🚀 Step 3: Use Callback in Your Crew</h3>
+            <div class="code-block"><span class="variable">crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">researcher</span>, <span
+                    class="variable">writer</span>],
+                <span class="variable">tasks</span>=[<span class="variable">research_task</span>, <span
+                    class="variable">writing_task</span>],
+                <span class="variable">step_callback</span>=<span class="variable">step_callback</span>, <span
+                    class="comment"># 🔑 This is the magic!</span>
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+            </div>
+        </div>
+
+        <!-- Slide 20: Putting It All Together -->
+        <div class="slide" data-slide="19">
+            <h2>Putting Advanced Features Together</h2>
+
+            <h3>🎯 Complete Example: All Advanced Features Combined</h3>
+            <div class="code-block"><span class="keyword">import</span> <span class="variable">asyncio</span>
+                <span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Agent</span>, <span class="class">Task</span>,
+                <span class="class">Crew</span>, <span class="class">Process</span>
+                <span class="keyword">from</span> <span class="variable">langchain_openai</span> <span
+                    class="keyword">import</span> <span class="class">ChatOpenAI</span>
+
+                <span class="comment"># 1. Create callback function</span>
+                <span class="keyword">def</span> <span class="function">progress_tracker</span>(<span
+                    class="variable">step</span>):
+                <span class="function">print</span>(<span class="string">f"🎉 {step.agent.role} finished:
+                    {step.description[:50]}..."</span>)
+
+                <span class="comment"># 2. Create agents (same as always)</span>
+                <span class="variable">agents</span> = [<span class="variable">researcher</span>, <span
+                    class="variable">writer</span>, <span class="variable">editor</span>]
+                <span class="variable">tasks</span> = [<span class="variable">research_task</span>, <span
+                    class="variable">write_task</span>, <span class="variable">edit_task</span>]
+
+                <span class="comment"># 3. Create advanced crew with ALL features</span>
+                <span class="variable">advanced_crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=<span class="variable">agents</span>,
+                <span class="variable">tasks</span>=<span class="variable">tasks</span>,
+                <span class="variable">process</span>=<span class="class">Process</span>.<span
+                    class="variable">hierarchical</span>, <span class="comment"># Hierarchical</span>
+                <span class="variable">manager_llm</span>=<span class="class">ChatOpenAI</span>(<span
+                    class="variable">model</span>=<span class="string">"gpt-4"</span>), <span class="comment">#
+                    Manager</span>
+                <span class="variable">step_callback</span>=<span class="variable">progress_tracker</span>, <span
+                    class="comment"># Callbacks</span>
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+
+                <span class="comment"># 4. Run with async</span>
+                <span class="keyword">async def</span> <span class="function">run_advanced_crew</span>():
+                <span class="function">print</span>(<span class="string">"🚀 Starting advanced crew
+                    execution..."</span>)
+                <span class="variable">result</span> = <span class="keyword">await</span> <span
+                    class="variable">advanced_crew</span>.<span class="function">kickoff_async</span>()
+                <span class="function">print</span>(<span class="string">"✅ All done!"</span>)
+                <span class="keyword">return</span> <span class="variable">result</span>
+
+                <span class="comment"># 5. Execute everything</span>
+                <span class="variable">final_result</span> = <span class="variable">asyncio</span>.<span
+                    class="function">run</span>(<span class="function">run_advanced_crew</span>())
+            </div>
+
+            <div class="highlight">
+                <p><strong>🎓 Congratulations!</strong> You now know all the advanced CrewAI features. Start with simple
+                    crews and gradually add these features as you become more comfortable!</p>
+            </div>
+        </div>
+
+        <!-- Slide 21: Real-World Example -->
+        <div class="slide" data-slide="20">
+            <h2>Complete Example: Content Creation Pipeline</h2>
+
+            <div class="code-block"><span class="keyword">from</span> <span class="variable">crewai</span> <span
+                    class="keyword">import</span> <span class="class">Agent</span>, <span class="class">Task</span>,
+                <span class="class">Crew</span>, <span class="class">Process</span>
+                <span class="keyword">from</span> <span class="variable">crewai_tools</span> <span
+                    class="keyword">import</span> <span class="class">SerperDevTool</span>
+                <span class="keyword">from</span> <span class="variable">langchain.llms</span> <span
+                    class="keyword">import</span> <span class="class">OpenAI</span>
+
+                <span class="comment"># Initialize tools</span>
+                <span class="variable">search_tool</span> = <span class="class">SerperDevTool</span>()
+
+                <span class="comment"># Create agents</span>
+                <span class="variable">content_planner</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Content Planner'</span>,
+                <span class="variable">goal</span>=<span class="string">'Plan engaging content strategies'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Strategic content planner with SEO
+                    expertise'</span>,
+                <span class="variable">tools</span>=[<span class="variable">search_tool</span>],
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+
+                <span class="variable">content_writer</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Content Writer'</span>,
+                <span class="variable">goal</span>=<span class="string">'Write compelling blog posts'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Experienced writer specializing in tech
+                    content'</span>,
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+
+                <span class="variable">editor</span> = <span class="class">Agent</span>(
+                <span class="variable">role</span>=<span class="string">'Editor'</span>,
+                <span class="variable">goal</span>=<span class="string">'Review and refine content for
+                    publication'</span>,
+                <span class="variable">backstory</span>=<span class="string">'Detail-oriented editor ensuring
+                    quality'</span>,
+                <span class="variable">verbose</span>=<span class="keyword">True</span>
+                )
+
+                <span class="comment"># Create tasks</span>
+                <span class="variable">plan_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Research trending topics in AI and
+                    create content plan'</span>,
+                <span class="variable">agent</span>=<span class="variable">content_planner</span>,
+                <span class="variable">expected_output</span>=<span class="string">'Content strategy with 3 blog post
+                    ideas'</span>
+                )
+
+                <span class="variable">write_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Write detailed blog post based on the
+                    content plan'</span>,
+                <span class="variable">agent</span>=<span class="variable">content_writer</span>,
+                <span class="variable">context</span>=[<span class="variable">plan_task</span>],
+                <span class="variable">expected_output</span>=<span class="string">'Complete blog post in
+                    markdown'</span>
+                )
+
+                <span class="variable">edit_task</span> = <span class="class">Task</span>(
+                <span class="variable">description</span>=<span class="string">'Review and edit the blog post for
+                    publication'</span>,
+                <span class="variable">agent</span>=<span class="variable">editor</span>,
+                <span class="variable">context</span>=[<span class="variable">write_task</span>],
+                <span class="variable">expected_output</span>=<span class="string">'Publication-ready blog post'</span>
+                )
+
+                <span class="comment"># Create and run crew</span>
+                <span class="variable">content_crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">content_planner</span>, <span
+                    class="variable">content_writer</span>, <span class="variable">editor</span>],
+                <span class="variable">tasks</span>=[<span class="variable">plan_task</span>, <span
+                    class="variable">write_task</span>, <span class="variable">edit_task</span>],
+                <span class="variable">process</span>=<span class="class">Process</span>.<span
+                    class="variable">sequential</span>,
+                <span class="variable">verbose</span>=<span class="number">2</span>
+                )
+
+                <span class="variable">result</span> = <span class="variable">content_crew</span>.<span
+                    class="function">kickoff</span>()
+                <span class="function">print</span>(<span class="variable">result</span>)
+            </div>
+        </div>
+
+        <!-- Slide 22: Best Practices -->
+        <div class="slide" data-slide="21">
+            <h2>Best Practices</h2>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🎯 Clear Role Definition</h3>
+                    <p>Give agents specific, well-defined roles with clear boundaries and expertise areas.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📝 Detailed Task Descriptions</h3>
+                    <p>Write comprehensive task descriptions with specific requirements and expected outputs.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔧 Right Tools for the Job</h3>
+                    <p>Equip agents with appropriate tools for their tasks. Don't over-tool or under-tool.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔄 Iterative Development</h3>
+                    <p>Start simple and gradually add complexity. Test each component before combining.</p>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <h3>Performance Tips:</h3>
+                <ul>
+                    <li>Use appropriate temperature settings for different types of tasks</li>
+                    <li>Implement proper error handling and fallbacks</li>
+                    <li>Monitor token usage and costs</li>
+                    <li>Cache results when appropriate</li>
+                    <li>Use structured outputs for data processing tasks</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 23: Troubleshooting -->
+        <div class="slide" data-slide="22">
+            <h2>Common Issues & Solutions</h2>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                    <tr>
+                        <td>Agent gets stuck in loops</td>
+                        <td>Unclear task description</td>
+                        <td>Be more specific in task requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Poor output quality</td>
+                        <td>Inadequate backstory/context</td>
+                        <td>Enhance agent backstory and provide examples</td>
+                    </tr>
+                    <tr>
+                        <td>Tool usage errors</td>
+                        <td>Missing permissions/setup</td>
+                        <td>Verify API keys and tool configurations</td>
+                    </tr>
+                    <tr>
+                        <td>High token usage</td>
+                        <td>Verbose settings, large contexts</td>
+                        <td>Optimize prompts, use summarization</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="code-block"><span class="comment"># Debug crew execution</span>
+                <span class="variable">crew</span> = <span class="class">Crew</span>(
+                <span class="variable">agents</span>=[<span class="variable">agent</span>],
+                <span class="variable">tasks</span>=[<span class="variable">task</span>],
+                <span class="variable">verbose</span>=<span class="number">2</span>, <span class="comment"># Maximum
+                    verbosity</span>
+                <span class="comment"># debug=True, # Additional debug info</span>
+                )
+
+                <span class="comment"># Check individual agent responses</span>
+                <span class="variable">agent_response</span> = <span class="variable">agent</span>.<span
+                    class="function">execute_task</span>(<span class="variable">task</span>)
+                <span class="function">print</span>(<span class="string">f"Agent response: {agent_response}"</span>)
+            </div>
+        </div>
+
+        <!-- Slide 24: Next Steps -->
+        <div class="slide" data-slide="23">
+            <h2>Next Steps & Resources</h2>
+
+            <h3>🚀 What to Explore Next:</h3>
+            <ul>
+                <li>Experiment with different LLM providers (Anthropic, Google, Ollama)</li>
+                <li>Build custom tools for your specific use cases</li>
+                <li>Implement hierarchical processes with manager agents</li>
+                <li>Explore CrewAI's integration with LangChain ecosystem</li>
+                <li>Try async execution for performance optimization</li>
+            </ul>
+
+            <h3>📚 Learning Resources:</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Official Documentation</h3>
+                    <p>docs.crewai.com - Comprehensive guides and API reference</p>
+                </div>
+                <div class="feature-card">
+                    <h3>GitHub Repository</h3>
+                    <p>github.com/joaomdmoura/crewAI - Source code and examples</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Community</h3>
+                    <p>Discord server and GitHub discussions for support</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Examples Repository</h3>
+                    <p>Real-world examples and use cases</p>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Happy Coding!</strong> Start with simple crews and gradually build more complex multi-agent
+                    systems. The key is experimentation and iteration.</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn">← Previous</button>
+            <span class="slide-counter" id="slideCounter">1 / 24</span>
+            <button class="nav-btn" id="nextBtn">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slideCounter = document.getElementById('slideCounter');
+        const progressBar = document.getElementById('progressBar');
+
+        function showSlide(slideIndex) {
+            // Hide all slides
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+            });
+
+            // Ensure slideIndex is within bounds
+            if (slideIndex < 0) slideIndex = 0;
+            if (slideIndex >= totalSlides) slideIndex = totalSlides - 1;
+
+            // Update current slide
+            currentSlide = slideIndex;
+
+            // Show the current slide
+            slides[currentSlide].classList.add('active');
+
+            // Update navigation
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            // Update counter
+            slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+            // Update button states
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function (e) {
+            switch (e.key) {
+                case 'ArrowLeft':
+                    prevSlide();
+                    break;
+                case 'ArrowRight':
+                    nextSlide();
+                    break;
+                case 'Home':
+                    showSlide(0);
+                    break;
+                case 'End':
+                    showSlide(totalSlides - 1);
+                    break;
+            }
+        });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', function (e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function (e) {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > 50) { // Minimum swipe distance
+                if (diff > 0) {
+                    nextSlide(); // Swipe left = next slide
+                } else {
+                    prevSlide(); // Swipe right = previous slide
+                }
+            }
+        });
+
+        // Initialize the presentation
+        showSlide(0);
+    </script>
+</body>
+
+</html>
