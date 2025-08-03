@@ -1,0 +1,17 @@
+# Core web framework
+streamlit
+
+# Async HTTP requests for MCP server communication
+aiohttp
+requests
+
+# LangChain for AI workflow orchestration
+langchain
+langchain-openai
+langchain_community
+
+# OpenAI API client (used by LangChain for OpenRouter)
+openai
+
+# Data validation (required by LangChain)
+pydantic
