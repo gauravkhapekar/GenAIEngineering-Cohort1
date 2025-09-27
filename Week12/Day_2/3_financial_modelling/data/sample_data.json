@@ -1,0 +1,251 @@
+{
+  "sample_portfolios": {
+    "tech_growth": {
+      "name": "Technology Growth Portfolio",
+      "description": "High-growth technology stocks",
+      "symbols": ["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"],
+      "weights": [0.25, 0.20, 0.25, 0.15, 0.15],
+      "risk_profile": "High",
+      "expected_return": 0.12,
+      "volatility": 0.25
+    },
+    "dividend_income": {
+      "name": "Dividend Income Portfolio", 
+      "description": "High dividend yield stocks",
+      "symbols": ["JNJ", "PG", "KO", "VZ", "T"],
+      "weights": [0.20, 0.20, 0.20, 0.20, 0.20],
+      "risk_profile": "Low",
+      "expected_return": 0.06,
+      "volatility": 0.12
+    },
+    "balanced": {
+      "name": "Balanced Portfolio",
+      "description": "Mix of growth and value stocks",
+      "symbols": ["AAPL", "JNJ", "BRK-B", "GOOGL", "JPM"],
+      "weights": [0.20, 0.20, 0.20, 0.20, 0.20],
+      "risk_profile": "Moderate",
+      "expected_return": 0.08,
+      "volatility": 0.16
+    }
+  },
+  
+  "market_data": {
+    "indices": {
+      "SP500": {
+        "symbol": "^GSPC",
+        "current_level": 4150.0,
+        "ytd_return": 0.08,
+        "volatility": 0.18,
+        "pe_ratio": 19.5
+      },
+      "NASDAQ": {
+        "symbol": "^IXIC", 
+        "current_level": 12800.0,
+        "ytd_return": 0.12,
+        "volatility": 0.22,
+        "pe_ratio": 25.3
+      },
+      "DOW": {
+        "symbol": "^DJI",
+        "current_level": 34500.0,
+        "ytd_return": 0.06,
+        "volatility": 0.16,
+        "pe_ratio": 18.2
+      }
+    },
+    
+    "sectors": {
+      "Technology": {
+        "ytd_return": 0.15,
+        "volatility": 0.25,
+        "weight_in_sp500": 0.28,
+        "top_stocks": ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
+      },
+      "Healthcare": {
+        "ytd_return": 0.04,
+        "volatility": 0.14,
+        "weight_in_sp500": 0.13,
+        "top_stocks": ["JNJ", "UNH", "PFE", "ABBV", "TMO"]
+      },
+      "Financials": {
+        "ytd_return": 0.02,
+        "volatility": 0.20,
+        "weight_in_sp500": 0.11,
+        "top_stocks": ["BRK-B", "JPM", "BAC", "WFC", "GS"]
+      }
+    }
+  },
+  
+  "economic_indicators": {
+    "interest_rates": {
+      "fed_funds_rate": 0.025,
+      "10_year_treasury": 0.035,
+      "30_year_mortgage": 0.065
+    },
+    "inflation": {
+      "cpi_annual": 0.032,
+      "core_cpi": 0.028,
+      "pce": 0.030
+    },
+    "employment": {
+      "unemployment_rate": 0.038,
+      "job_openings": 10500000,
+      "labor_participation": 0.632
+    },
+    "gdp": {
+      "annual_growth": 0.025,
+      "quarterly_growth": 0.006
+    }
+  },
+  
+  "risk_factors": {
+    "market_risks": [
+      "Interest rate volatility",
+      "Inflation concerns", 
+      "Geopolitical tensions",
+      "Economic recession",
+      "Currency fluctuations"
+    ],
+    "sector_risks": {
+      "Technology": [
+        "Regulatory changes",
+        "Competition",
+        "Valuation concerns"
+      ],
+      "Healthcare": [
+        "Drug approval risks",
+        "Pricing pressure",
+        "Regulatory changes"
+      ],
+      "Financials": [
+        "Interest rate sensitivity",
+        "Credit risks",
+        "Regulatory compliance"
+      ]
+    }
+  },
+  
+  "historical_scenarios": {
+    "2008_financial_crisis": {
+      "description": "Global financial crisis",
+      "duration_months": 18,
+      "market_decline": -0.37,
+      "recovery_months": 24,
+      "key_factors": [
+        "Subprime mortgage crisis",
+        "Banking sector collapse",
+        "Credit freeze",
+        "Global recession"
+      ]
+    },
+    "2020_covid_crash": {
+      "description": "COVID-19 pandemic market crash",
+      "duration_months": 2,
+      "market_decline": -0.34,
+      "recovery_months": 5,
+      "key_factors": [
+        "Global pandemic",
+        "Economic lockdowns",
+        "Unprecedented fiscal stimulus",
+        "Remote work transition"
+      ]
+    },
+    "2000_dotcom_bubble": {
+      "description": "Dot-com bubble burst",
+      "duration_months": 30,
+      "market_decline": -0.49,
+      "recovery_months": 84,
+      "key_factors": [
+        "Technology overvaluation",
+        "Irrational exuberance",
+        "High interest rates",
+        "Corporate scandals"
+      ]
+    }
+  },
+  
+  "correlation_matrix": {
+    "AAPL": {"AAPL": 1.00, "GOOGL": 0.75, "MSFT": 0.80, "TSLA": 0.65, "JNJ": 0.45},
+    "GOOGL": {"AAPL": 0.75, "GOOGL": 1.00, "MSFT": 0.78, "TSLA": 0.62, "JNJ": 0.42},
+    "MSFT": {"AAPL": 0.80, "GOOGL": 0.78, "MSFT": 1.00, "TSLA": 0.58, "JNJ": 0.48},
+    "TSLA": {"AAPL": 0.65, "GOOGL": 0.62, "MSFT": 0.58, "TSLA": 1.00, "JNJ": 0.35},
+    "JNJ": {"AAPL": 0.45, "GOOGL": 0.42, "MSFT": 0.48, "TSLA": 0.35, "JNJ": 1.00}
+  },
+  
+  "fundamental_data": {
+    "AAPL": {
+      "market_cap": 2800000000000,
+      "pe_ratio": 28.5,
+      "price_to_book": 8.2,
+      "debt_to_equity": 0.31,
+      "roe": 0.26,
+      "revenue_growth": 0.08,
+      "earnings_growth": 0.12,
+      "dividend_yield": 0.005
+    },
+    "GOOGL": {
+      "market_cap": 1650000000000,
+      "pe_ratio": 22.1,
+      "price_to_book": 4.8,
+      "debt_to_equity": 0.12,
+      "roe": 0.18,
+      "revenue_growth": 0.15,
+      "earnings_growth": 0.20,
+      "dividend_yield": 0.0
+    },
+    "MSFT": {
+      "market_cap": 2500000000000,
+      "pe_ratio": 26.8,
+      "price_to_book": 7.5,
+      "debt_to_equity": 0.35,
+      "roe": 0.24,
+      "revenue_growth": 0.12,
+      "earnings_growth": 0.15,
+      "dividend_yield": 0.007
+    }
+  },
+  
+  "forecast_scenarios": {
+    "bull_case": {
+      "description": "Strong economic growth scenario",
+      "probability": 0.25,
+      "market_return": 0.15,
+      "key_assumptions": [
+        "GDP growth >3%",
+        "Low inflation",
+        "Strong earnings growth",
+        "Stable geopolitics"
+      ]
+    },
+    "base_case": {
+      "description": "Moderate growth scenario",
+      "probability": 0.50,
+      "market_return": 0.08,
+      "key_assumptions": [
+        "GDP growth 2-3%",
+        "Controlled inflation",
+        "Steady earnings",
+        "Normal volatility"
+      ]
+    },
+    "bear_case": {
+      "description": "Economic slowdown scenario",
+      "probability": 0.25,
+      "market_return": -0.05,
+      "key_assumptions": [
+        "GDP growth <2%",
+        "Rising inflation",
+        "Earnings pressure",
+        "Increased uncertainty"
+      ]
+    }
+  },
+  
+  "metadata": {
+    "data_source": "Sample data for demonstration",
+    "last_updated": "2024-01-15T10:00:00Z",
+    "currency": "USD",
+    "disclaimer": "This is simulated data for demonstration purposes only. Not for investment decisions.",
+    "version": "1.0"
+  }
+}
